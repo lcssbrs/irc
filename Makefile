@@ -6,7 +6,7 @@
 #    By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/22 11:56:27 by lseiberr          #+#    #+#              #
-#    Updated: 2024/01/23 09:45:13 by lseiberr         ###   ########.fr        #
+#    Updated: 2024/01/23 10:35:23 by lseiberr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -50,9 +50,9 @@ $(NAME): comp_start $(OBJ)
 	$(EXE_READY)
 
 %.o: %.cpp
-	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)[%3d%%] \r$(NO_COLOR)" $? $
+	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)\r$(NO_COLOR)" $? $
 	@$(CC) $(CFLAGS) -c $< -o $@
-	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)[%3d%%] \r$(NO_COLOR)" $? $
+	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)\r$(NO_COLOR)" $? $
 
 clean:
 	@rm -f *.o
