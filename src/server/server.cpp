@@ -6,7 +6,7 @@
 /*   By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 17:28:44 by lseiberr          #+#    #+#             */
-/*   Updated: 2024/01/23 13:53:06 by lseiberr         ###   ########.fr       */
+/*   Updated: 2024/01/23 15:36:27 by lseiberr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ Server::Server(std::string newPassword, std::string newPort)
 	this->sin.sin_family = AF_INET;
 	this->sin.sin_addr.s_addr = INADDR_ANY;
 	this->sin.sin_port = htons(this->port);
+	this->fdclient.clear();
+	csin_len = sizeof(csin);
 }
 
 Server::Server(const Server & cpy)
@@ -97,4 +99,50 @@ const char *Server::NotGoodProtocolException::what() const throw()
 const char *Server::NotGoodFdServException::what() const throw()
 {
 	return ("FD serv error");
+}
+
+const char *Server::ErrorBindageException::what() const throw()
+{
+	return ("Error bindage adress local");
+}
+
+const char *Server::ErrorListenException::what() const throw()
+{
+	return ("Error listenting fd");
+}
+
+const char *Server::FdClientException::what() const throw()
+{
+	return ("FD Cannot open");
+}
+
+int	Server::check_fd_client()
+{
+	std::vector<int>::iterator it = this->fdclient.begin();
+	while (it != this->fdclient.end())
+	{
+		if (*it == -1)
+			return -1;
+		it++;
+	}
+	return (0);
+}
+
+void	Server::init_server(void)
+{
+	int bd = bind(this->fdserv, (struct sockaddr*)&this->sin, sizeof(this->sin));
+	if (bd == -1)
+		throw(ErrorBindageException());
+	int ls = listen(this->fdserv, backlog);
+	if (ls == -1)
+		throw(ErrorListenException());
+	while (1)
+	{
+		
+		this->fdclient.push_back(accept(this->fdserv, (struct sockaddr*)&this->csin, &this->csin_len));
+		inet_ntoa(this->csin.sin_addr);
+		ntohs(this->csin.sin_port);
+		if (check_fd_client() == -1)
+			throw (FdClientException());
+	}
 }

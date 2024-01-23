@@ -6,7 +6,7 @@
 /*   By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 16:27:33 by lseiberr          #+#    #+#             */
-/*   Updated: 2024/01/23 13:54:10 by lseiberr         ###   ########.fr       */
+/*   Updated: 2024/01/23 15:33:48 by lseiberr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,16 @@
 #include <iostream>
 #define _OE_SOCKETS
 #include <netdb.h>
+#include <vector>
 #include <stdlib.h>
 #include <exception>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+#define backlog 42
+
 class Server
 {
 	public:
@@ -55,12 +62,38 @@ class Server
 				const char *what() const throw();
 		};
 
+		class ErrorBindageException: public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
+
+		class ErrorListenException: public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
+
+		class FdClientException: public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
+
+	//server utils
+
+		void	init_server(void);
+		int		check_fd_client();
+
 	private:
 		std::string 		password;
 		int					port;
 		struct	protoent	*pe;
 		struct sockaddr_in	sin;
 		int					fdserv;
+		std::vector<int>	fdclient;
+		struct sockaddr_in	csin;
+		socklen_t			csin_len;
 
 	protected:
 };

@@ -4,12 +4,13 @@
 #include <netinet/in.h>
 #include "bircd.h"
 
+
 void			srv_create(t_env *e, int port)
 {
   int			s;
   struct sockaddr_in	sin;
   struct protoent	*pe;
-  
+
   pe = (struct protoent*)Xv(NULL, getprotobyname("tcp"), "getprotobyname");
   s = X(-1, socket(PF_INET, SOCK_STREAM, pe->p_proto), "socket");
   sin.sin_family = AF_INET;
