@@ -6,7 +6,7 @@
 /*   By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 11:56:21 by lseiberr          #+#    #+#             */
-/*   Updated: 2024/01/23 15:32:00 by lseiberr         ###   ########.fr       */
+/*   Updated: 2024/01/24 09:50:37 by lseiberr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 int checkarg(char **ag, int ac)
 {
-	if (!atoi(ag[1]) || atoi(ag[1]) <= 0 || !ag[2] || ac != 3)
+	if ( ac != 3 || !atoi(ag[1]) || atoi(ag[1]) <= 0 || !ag[2])
 	{
 		std::cerr << "This program has to be used as : [NAME OF PROGRAM] [PORT] [PASSWORD]\n";
 		return -1;
