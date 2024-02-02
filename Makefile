@@ -6,7 +6,7 @@
 #    By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/22 11:56:27 by lseiberr          #+#    #+#              #
-#    Updated: 2024/02/02 15:25:12 by hbaduel          ###   ########.fr        #
+#    Updated: 2024/02/02 21:56:47 by hbaduel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ NAME	= ircserver
 CC		= g++
 CFLAGS	= -Werror -Wextra -Wall -std=c++98
 
-SRC		= src/main.cpp src/server/server.cpp
+SRC		= src/main.cpp src/server/server.cpp src/client/client.cpp src/channel/channel.cpp
 OBJ		= $(SRC:.cpp=.o)
 
 #Colors
