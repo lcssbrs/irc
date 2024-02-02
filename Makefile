@@ -6,7 +6,7 @@
 #    By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/22 11:56:27 by lseiberr          #+#    #+#              #
-#    Updated: 2024/02/02 21:56:47 by hbaduel          ###   ########.fr        #
+#    Updated: 2024/02/02 22:05:04 by hbaduel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ CC		= g++
 CFLAGS	= -Werror -Wextra -Wall -std=c++98
 
 SRC		= src/main.cpp src/server/server.cpp src/client/client.cpp src/channel/channel.cpp
-OBJ		= $(SRC:.cpp=.o)
+OBJ		= $(SRC:%.cpp=%.o)
 
 #Colors
 
@@ -55,14 +55,12 @@ $(NAME): comp_start $(OBJ)
 	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)\r$(NO_COLOR)" $? $
 
 clean:
-	@rm -f *.o
-	@rm -f src/*.o
-	@rm -f src/server/*.o
-	@rm -f src/client/*.o
+	@rm -rf $(OBJ)
 	$(CLEANED)
 
 fclean: clean
-	@rm -f $(NAME)
+	@rm -rf $(NAME)
+	@rm -rf $(OBJ)
 	$(FCLEANED)
 
 re: fclean all
