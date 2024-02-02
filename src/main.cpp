@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 11:56:21 by lseiberr          #+#    #+#             */
-/*   Updated: 2024/01/24 09:50:37 by lseiberr         ###   ########.fr       */
+/*   Updated: 2024/02/02 16:06:41 by hbaduel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int	try_init_server_class(char **ag)
 {
 	try
 	{
-		Server server((std::string)ag[2], (std::string)ag[1]);
+		Server server(ag[2], atoi(ag[1]));
 	}
 	catch(Server::NotGoodProtocolException & e)
 	{
@@ -47,7 +47,7 @@ int main(int ac, char **ag)
 {
 	if (checkarg(ag, ac) == -1 || try_init_server_class(ag) == -1)
 		return (-1);
-	Server server((std::string)ag[2], (std::string)ag[1]);
+	Server server(ag[2], atoi(ag[1]));
 	std::cout << server.getProto().p_name << std::endl;
 	try
 	{

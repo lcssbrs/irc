@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 17:28:44 by lseiberr          #+#    #+#             */
-/*   Updated: 2024/01/23 15:36:27 by lseiberr         ###   ########.fr       */
+/*   Updated: 2024/02/02 16:21:33 by hbaduel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,10 @@ Server::Server()
 
 }
 
-Server::Server(std::string newPassword, std::string newPort)
+Server::Server(std::string newPassword, int newPort)
 {
 	this->password = newPassword;
-	this->port = stoi(newPort);
+	this->port = newPort;
 	this->pe = getprotobyname("tcp");
 	if (!pe)
 		throw (NotGoodProtocolException());
@@ -138,10 +138,10 @@ void	Server::init_server(void)
 		throw(ErrorListenException());
 	while (1)
 	{
-		
+
 		this->fdclient.push_back(accept(this->fdserv, (struct sockaddr*)&this->csin, &this->csin_len));
 		inet_ntoa(this->csin.sin_addr);
-		ntohs(this->csin.sin_port);
+		(void)ntohs(this->csin.sin_port);
 		if (check_fd_client() == -1)
 			throw (FdClientException());
 	}

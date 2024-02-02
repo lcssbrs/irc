@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 16:27:33 by lseiberr          #+#    #+#             */
-/*   Updated: 2024/01/23 15:33:48 by lseiberr         ###   ########.fr       */
+/*   Updated: 2024/02/02 16:04:38 by hbaduel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Server
 		~Server();
 
 	//constructor by default using port and password
-		Server(std::string newPassword, std::string newPort);
+		Server(std::string newPassword, int newPort);
 
 	//getter
 		int					getPort(void)const;

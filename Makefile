@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+         #
+#    By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/22 11:56:27 by lseiberr          #+#    #+#              #
-#    Updated: 2024/01/23 10:35:23 by lseiberr         ###   ########.fr        #
+#    Updated: 2024/02/02 15:25:12 by hbaduel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
