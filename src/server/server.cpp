@@ -1,10 +1,5 @@
 #include "../../includes/server/server.hpp"
 
-Server::Server()
-{
-
-}
-
 Server::Server(std::string newPassword, int newPort)
 {
 	this->password = newPassword;
@@ -20,17 +15,6 @@ Server::Server(std::string newPassword, int newPort)
 	this->sin.sin_port = htons(this->port);
 	this->fdclient.clear();
 	csin_len = sizeof(csin);
-}
-
-Server::Server(const Server & cpy)
-{
-	*this = cpy;
-}
-
-Server & Server::operator=(const Server & ope)
-{
-	(void)ope;
-	return *this;
 }
 
 Server::~Server()
@@ -63,18 +47,6 @@ struct	protoent	Server::getProto(void)const
 struct sockaddr_in Server::getSin(void)const
 {
 	return this->sin;
-}
-
-//setter
-
-void	Server::setPort(int newPort)
-{
-	this->port = newPort;
-}
-
-void	Server::setPassword(std::string newPassword)
-{
-	this->password = newPassword;
 }
 
 //exception

@@ -17,10 +17,7 @@
 class Server
 {
 	public:
-	//Canonic class form
-		Server();
-		Server(const Server &cpy);
-		Server & operator=(const Server & ope);
+	//Destructor
 		~Server();
 
 	//constructor by default using port and password
@@ -32,10 +29,6 @@ class Server
 		int					getFdserv(void)const;
 		struct sockaddr_in	getSin(void)const;
 		struct	protoent	getProto(void)const;
-
-	//setter
-		void	setPort(int newPort);
-		void	setPassword(std::string newPassword);
 
 	//exception
 		class NotGoodProtocolException: public std::exception
