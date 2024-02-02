@@ -1,10 +1,5 @@
 #include "../../includes/server/server.hpp"
 
-Server::Server()
-{
-
-}
-
 Server::Server(std::string newPassword, int newPort)
 {
 	this->password = newPassword;

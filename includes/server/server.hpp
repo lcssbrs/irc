@@ -23,8 +23,7 @@ class Channel;
 class Server
 {
 	public:
-	//Canonic class form
-		Server();
+	//Destructor
 		~Server();
 
 	//constructor by default using port and password
