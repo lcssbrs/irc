@@ -11,16 +11,20 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <poll.h>
+#include <list>
+
+#include "Channel.hpp"
 
 #define backlog 42
+
+class Channel;
 
 class Server
 {
 	public:
 	//Canonic class form
 		Server();
-		Server(const Server &cpy);
-		Server & operator=(const Server & ope);
 		~Server();
 
 	//constructor by default using port and password
@@ -32,10 +36,6 @@ class Server
 		int					getFdserv(void)const;
 		struct sockaddr_in	getSin(void)const;
 		struct	protoent	getProto(void)const;
-
-	//setter
-		void	setPort(int newPort);
-		void	setPassword(std::string newPassword);
 
 	//exception
 		class NotGoodProtocolException: public std::exception
@@ -82,6 +82,9 @@ class Server
 		std::vector<int>	fdclient;
 		struct sockaddr_in	csin;
 		socklen_t			csin_len;
+
+		std::list<Channel *> channels;
+
 
 	protected:
 };
