@@ -89,7 +89,8 @@ void Server::manage_loop() {
             break;
         }
 
-        if (num_events > 0) {
+        if (num_events > 0)
+		{
             for (size_t i = 0; i < fds.size(); ++i)
 			{
                 if (fds[i].revents & POLLIN)
@@ -101,7 +102,8 @@ void Server::manage_loop() {
                         if (client_fd == -1)
 						{
                             std::cerr << "Error accepting connection" << std::endl;
-                        } else {
+                        } else
+						{
                             // Ajouter le nouveau client à la liste des descripteurs de fichiers à surveiller
                             struct pollfd client_pollfd;
                             client_pollfd.fd = client_fd;
@@ -118,13 +120,15 @@ void Server::manage_loop() {
                             // Traitement des données reçues
                             line[fds[i].fd] += buffer;
                             std::cout << buffer;
-                        } else if (bytes_received == 0)
+                        }
+						else if (bytes_received == 0)
 						{
                             // Déconnexion du client
                             std::cout << "Client disconnected" << std::endl;
                             close(fds[i].fd);
                             fds.erase(fds.begin() + i);
-                        } else
+                        }
+						else
 						{
                             // Erreur de réception
                             std::cerr << "Error receiving data from client" << std::endl;
@@ -153,9 +157,10 @@ int Server::manage_server()
 	return (0);
 }
 
-void Server::create_client(std::string & name std::string & nickname)
+void Server::create_client(std::string & name, std::string & nickname)
 {
 	(void)name;
+	(void)nickname;
 }
 
 void Server::create_channel(std::string & name)
@@ -166,4 +171,9 @@ void Server::create_channel(std::string & name)
 void Server::remove_client_from_channel(Client * kick)
 {
 	(void)kick;
+}
+
+void Server::parsing_msg(std::string & buffer)
+{
+	(void)buffer;
 }
