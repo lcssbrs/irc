@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <map>
 #include <list>
+#include <fcntl.h>
 #include "../client/client.hpp"
 #include <netdb.h>
 #include <netinet/in.h>
