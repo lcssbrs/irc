@@ -88,8 +88,6 @@ void Server::manage_loop()
 		this->fds.back().fd = accept(this->fd_server, &sin, &len);
 		if (this->fds.back().fd == -1)
 			std::cout << "fd pas valid\n";
-		else
-			std::cout << "yes\n";
 		this->fds.back().events = POLLIN;
 		if (fds.back().fd != fd_server)
 		{
@@ -98,9 +96,13 @@ void Server::manage_loop()
 			itfds++;
 			while (itfds != fds.end())
 			{
-				int readed = get_line((*itfds).fd, line[(*itfds).fd]);
+				std::string buff;
+				int readed = get_line((*itfds).fd, buff);
 				if (readed > 0)
+				{
+					line[(*itfds).fd] += buff;
 					std::cout << line[(*itfds).fd] << std::endl;
+				}
 				std::cout << (*itfds).fd << std::endl;
 				itfds++;
 			}
