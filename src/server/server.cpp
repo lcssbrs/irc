@@ -91,7 +91,6 @@ void Server::manage_loop()
 		this->fds.back().events = POLLIN;
 		if (fds.back().fd != fd_server)
 		{
-			std::cout << "test\n";
 			std::list<pollfd>::iterator itfds = fds.begin();
 			itfds++;
 			while (itfds != fds.end())
@@ -103,7 +102,6 @@ void Server::manage_loop()
 					line[(*itfds).fd] += buff;
 					std::cout << line[(*itfds).fd] << std::endl;
 				}
-				std::cout << (*itfds).fd << std::endl;
 				itfds++;
 			}
 		}
