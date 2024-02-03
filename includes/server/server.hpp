@@ -1,91 +1,65 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include <iostream>
-#define _OE_SOCKETS
+#include <poll.h>
+#include <map>
+#include <list>
+#include "../client/client.hpp"
 #include <netdb.h>
-#include <vector>
-#include <stdlib.h>
-#include <exception>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <poll.h>
-#include <list>
-
-#include "Channel.hpp"
+#include <exception>
+#include "../client/client.hpp"
+#include "../channel/channel.hpp"
 
 #define backlog 42
 
+
 class Channel;
+class Client;
 
 class Server
 {
+	private:
+		int fd_server;
+		std::map<int, Client *> clients;
+		std::map<std::string, Channel *> channels;
+		std::list<struct pollfd> fds;
+		int port;
+
 	public:
-	//Destructor
+		Server(int port);
 		~Server();
 
-	//constructor by default using port and password
-		Server(std::string newPassword, int newPort);
+		void init_server();
+		void manage_loop();
+		int manage_server();
+		void create_client(std::string & name);
+		void create_channel(std::string & name);
+		void remove_client_from_channel(Client * kick);
 
-	//getter
-		int					getPort(void)const;
-		std::string			getPassword(void)const;
-		int					getFdserv(void)const;
-		struct sockaddr_in	getSin(void)const;
-		struct	protoent	getProto(void)const;
-
-	//exception
-		class NotGoodProtocolException: public std::exception
+		class BindException: public std::exception
 		{
 			public:
 				const char *what() const throw();
 		};
 
-		class NotGoodFdServException: public std::exception
+		class ListenException: public std::exception
 		{
 			public:
 				const char *what() const throw();
 		};
 
-		class ErrorBindageException: public std::exception
+		class SocketException: public std::exception
 		{
 			public:
 				const char *what() const throw();
 		};
 
-		class ErrorListenException: public std::exception
+		class TCPException: public std::exception
 		{
 			public:
 				const char *what() const throw();
 		};
-
-		class FdClientException: public std::exception
-		{
-			public:
-				const char *what() const throw();
-		};
-
-	//server utils
-
-		void	init_server(void);
-		int		check_fd_client();
-
-	private:
-		std::string 		password;
-		int					port;
-		struct	protoent	*pe;
-		struct sockaddr_in	sin;
-		int					fdserv;
-		std::vector<int>	fdclient;
-		struct sockaddr_in	csin;
-		socklen_t			csin_len;
-
-		std::list<Channel *> channels;
-
-
-	protected:
 };
-
-#endif
