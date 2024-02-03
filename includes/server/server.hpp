@@ -37,7 +37,7 @@ class Server
 		void init_server();
 		void manage_loop();
 		int manage_server();
-		void create_client(std::string & name);
+		void create_client(std::string & name, std::str5ing & nickname);
 		void create_channel(std::string & name);
 		void remove_client_from_channel(Client * kick);
 

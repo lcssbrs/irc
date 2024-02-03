@@ -153,7 +153,7 @@ int Server::manage_server()
 	return (0);
 }
 
-void Server::create_client(std::string & name)
+void Server::create_client(std::string & name std::string & nickname)
 {
 	(void)name;
 }
