@@ -64,7 +64,8 @@ static int get_line(int fd, std::string &line)
 	char chr[2] = {0};
 	int readed = 0;
 	int total_read = 0;;
-	while ((readed = recv(fd,chr, 1, 0)) > 0){
+	while ((readed = recv(fd,chr, 1, 0)) > 0)
+	{
 		total_read += readed;
 		std::string append(chr);
 		line += append;
@@ -83,16 +84,17 @@ void Server::manage_loop()
 	std::string line[backlog];
 	while (1)
 	{
-		poll(&fds.front(), fds.size(), 1);
+		poll(&fds.front(), fds.size(), -1);
 		fds.push_back(pollf);
 		this->fds.back().fd = accept(this->fd_server, &sin, &len);
+		fcntl(this->fds.back().fd, F_SETFL, O_NONBLOCK);
 		if (this->fds.back().fd == -1)
 			std::cout << "fd pas valid\n";
 		this->fds.back().events = POLLIN;
 		if (fds.back().fd != fd_server)
 		{
 			std::list<pollfd>::iterator itfds = fds.begin();
-			itfds++;
+			//itfds++;
 			while (itfds != fds.end())
 			{
 				std::string buff;
@@ -100,7 +102,7 @@ void Server::manage_loop()
 				if (readed > 0)
 				{
 					line[(*itfds).fd] += buff;
-					std::cout << line[(*itfds).fd] << std::endl;
+					std::cout << line[(*itfds).fd];
 				}
 				itfds++;
 			}
@@ -114,25 +116,10 @@ int Server::manage_server()
 	{
 		init_server();
 	}
-	catch(BindException & e)
+	catch(std::exception & e)
 	{
 		std::cerr << e.what() << std::endl;
 		exit (1);
-	}
-	catch(SocketException & e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit(1);
-	}
-	catch(TCPException & e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit(1);
-	}
-	catch(ListenException & e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit(1);
 	}
 	manage_loop();
 	return (0);
