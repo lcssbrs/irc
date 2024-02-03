@@ -1,20 +1,9 @@
 #include "../../includes/server/server.hpp"
 
-Server::Server(std::string newPassword, int newPort)
+Server::Server(int port)
 {
-	this->password = newPassword;
-	this->port = newPort;
-	this->pe = getprotobyname("tcp");
-	if (!pe)
-		throw (NotGoodProtocolException());
-	this->fdserv = socket(PF_INET, SOCK_STREAM, this->pe->p_proto);
-	if (fdserv == -1)
-		throw (NotGoodFdServException());
-	this->sin.sin_family = AF_INET;
-	this->sin.sin_addr.s_addr = INADDR_ANY;
-	this->sin.sin_port = htons(this->port);
-	this->fdclient.clear();
-	csin_len = sizeof(csin);
+	this->port = port;
+	this->fds.clear();
 }
 
 Server::~Server()
@@ -22,87 +11,144 @@ Server::~Server()
 
 }
 
-//getter
-
-int Server::getPort(void)const
+const char *Server::BindException::what() const throw()
 {
-	return this->port;
+	return "Error bindage";
 }
 
-std::string Server::getPassword(void)const
+const char *Server::ListenException::what() const throw()
 {
-	return this->password;
+	return "Error listnening";
 }
 
-int			Server::getFdserv(void)const
+const char *Server::TCPException::what() const throw()
 {
-	return this->fdserv;
+	return "Error protocol";
 }
 
-struct	protoent	Server::getProto(void)const
+const char *Server::SocketException::what() const throw()
 {
-	return *this->pe;
+	return "Error socket server";
 }
 
-struct sockaddr_in Server::getSin(void)const
+void Server::init_server()
 {
-	return this->sin;
-}
-
-//exception
-
-const char *Server::NotGoodProtocolException::what() const throw()
-{
-	return ("Protocol not found");
-}
-
-const char *Server::NotGoodFdServException::what() const throw()
-{
-	return ("FD serv error");
-}
-
-const char *Server::ErrorBindageException::what() const throw()
-{
-	return ("Error bindage adress local");
-}
-
-const char *Server::ErrorListenException::what() const throw()
-{
-	return ("Error listenting fd");
-}
-
-const char *Server::FdClientException::what() const throw()
-{
-	return ("FD Cannot open");
-}
-
-int	Server::check_fd_client()
-{
-	std::vector<int>::iterator it = this->fdclient.begin();
-	while (it != this->fdclient.end())
+	struct sockaddr_in	sin;
+	struct protoent *pe = getprotobyname("tcp");
+	if (pe == NULL)
+		throw (TCPException());
+	this->fd_server = socket(PF_INET, SOCK_STREAM, pe->p_proto);
+	if (this->fd_server == -1)
+		throw (SocketException());
+	sin.sin_family = AF_INET; //ipv4
+	sin.sin_addr.s_addr = INADDR_ANY;
+	sin.sin_port = htons(this->port);
+	int yes=1;
+	if (setsockopt(this->fd_server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
 	{
-		if (*it == -1)
-			return -1;
-		it++;
+		std::cerr << "error reuse bind\n";
+		exit(1);
 	}
+	if (bind(this->fd_server, (struct sockaddr*)&sin, sizeof(sin)) == -1)
+		throw (BindException());
+	if (listen(this->fd_server, backlog) == -1)
+		throw (ListenException());
+	struct pollfd pollfd;
+	this->fds.push_front(pollfd);
+	this->fds.front().fd = fd_server;
+	this->fds.front().events = POLLIN;
+}
+
+static int get_line(int fd, std::string &line)
+{
+	char chr[2] = {0};
+	int readed = 0;
+	int total_read = 0;;
+	while ((readed = recv(fd,chr, 1, 0)) > 0){
+		total_read += readed;
+		std::string append(chr);
+		line += append;
+		if (chr[0] == '\n')
+			break;
+		memset(chr, 0, 2);
+	}
+	return total_read;
+}
+
+void Server::manage_loop()
+{
+	struct sockaddr	sin;
+	socklen_t len = sizeof(sin);
+	struct pollfd pollf;
+	std::string line[backlog];
+	while (1)
+	{
+		poll(&fds.front(), fds.size(), 1);
+		fds.push_back(pollf);
+		this->fds.back().fd = accept(this->fd_server, &sin, &len);
+		if (this->fds.back().fd == -1)
+			std::cout << "fd pas valid\n";
+		else
+			std::cout << "yes\n";
+		this->fds.back().events = POLLIN;
+		if (fds.back().fd != fd_server)
+		{
+			std::cout << "test\n";
+			std::list<pollfd>::iterator itfds = fds.begin();
+			itfds++;
+			while (itfds != fds.end())
+			{
+				int readed = get_line((*itfds).fd, line[(*itfds).fd]);
+				if (readed > 0)
+					std::cout << line[(*itfds).fd] << std::endl;
+				std::cout << (*itfds).fd << std::endl;
+				itfds++;
+			}
+		}
+	}
+}
+
+int Server::manage_server()
+{
+	try
+	{
+		init_server();
+	}
+	catch(BindException & e)
+	{
+		std::cerr << e.what() << std::endl;
+		exit (1);
+	}
+	catch(SocketException & e)
+	{
+		std::cerr << e.what() << std::endl;
+		exit(1);
+	}
+	catch(TCPException & e)
+	{
+		std::cerr << e.what() << std::endl;
+		exit(1);
+	}
+	catch(ListenException & e)
+	{
+		std::cerr << e.what() << std::endl;
+		exit(1);
+	}
+	manage_loop();
 	return (0);
 }
 
-void	Server::init_server(void)
+void Server::create_client(std::string & name)
 {
-	int bd = bind(this->fdserv, (struct sockaddr*)&this->sin, sizeof(this->sin));
-	if (bd == -1)
-		throw(ErrorBindageException());
-	int ls = listen(this->fdserv, backlog);
-	if (ls == -1)
-		throw(ErrorListenException());
-	while (1)
-	{
+	(void)name;
+}
 
-		this->fdclient.push_back(accept(this->fdserv, (struct sockaddr*)&this->csin, &this->csin_len));
-		inet_ntoa(this->csin.sin_addr);
-		(void)ntohs(this->csin.sin_port);
-		if (check_fd_client() == -1)
-			throw (FdClientException());
-	}
+void Server::create_channel(std::string & name)
+{
+	(void)name;
+}
+
+void Server::remove_client_from_channel(Client * kick)
+{
+	(void)kick;
 }
