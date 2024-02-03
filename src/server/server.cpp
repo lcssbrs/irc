@@ -54,7 +54,7 @@ void Server::init_server()
 	if (listen(this->fd_server, backlog) == -1)
 		throw (ListenException());
 	struct pollfd pollfd;
-	this->fds.push_front(pollfd);
+	this->fds.push_back(pollfd);
 	this->fds.front().fd = fd_server;
 	this->fds.front().events = POLLIN;
 }
@@ -76,39 +76,67 @@ static int get_line(int fd, std::string &line)
 	return total_read;
 }
 
-void Server::manage_loop()
-{
-	struct sockaddr	sin;
-	socklen_t len = sizeof(sin);
-	struct pollfd pollf;
-	std::string line[backlog];
-	while (1)
+void Server::manage_loop() {
+    struct sockaddr_in sin;
+    socklen_t len = sizeof(sin);
+    std::string line[backlog]; // Tableau de lignes pour chaque descripteur de fichier
+    while (true)
 	{
-		poll(&fds.front(), fds.size(), -1);
-		fds.push_back(pollf);
-		this->fds.back().fd = accept(this->fd_server, &sin, &len);
-		fcntl(this->fds.back().fd, F_SETFL, O_NONBLOCK);
-		if (this->fds.back().fd == -1)
-			std::cout << "fd pas valid\n";
-		this->fds.back().events = POLLIN;
-		if (fds.back().fd != fd_server)
+        int num_events = poll(&fds.front(), fds.size(), -1);
+        if (num_events == -1)
 		{
-			std::list<pollfd>::iterator itfds = fds.begin();
-			//itfds++;
-			while (itfds != fds.end())
+            std::cerr << "Error in poll" << std::endl;
+            break;
+        }
+
+        if (num_events > 0) {
+            for (size_t i = 0; i < fds.size(); ++i)
 			{
-				std::string buff;
-				int readed = get_line((*itfds).fd, buff);
-				if (readed > 0)
+                if (fds[i].revents & POLLIN)
 				{
-					line[(*itfds).fd] += buff;
-					std::cout << line[(*itfds).fd];
-				}
-				itfds++;
-			}
-		}
-	}
+                    if (fds[i].fd == fd_server)
+					{
+                        // Nouvelle connexion entrante
+                        int client_fd = accept(fd_server, (struct sockaddr*)&sin, &len);
+                        if (client_fd == -1)
+						{
+                            std::cerr << "Error accepting connection" << std::endl;
+                        } else {
+                            // Ajouter le nouveau client à la liste des descripteurs de fichiers à surveiller
+                            struct pollfd client_pollfd;
+                            client_pollfd.fd = client_fd;
+                            client_pollfd.events = POLLIN;
+                            fds.push_back(client_pollfd);
+                        }
+                    } else
+					{
+                        // Données disponibles sur un client existant
+                        std::string buffer;
+                        int bytes_received = get_line(fds[i].fd, buffer);
+                        if (bytes_received > 0)
+						{
+                            // Traitement des données reçues
+                            line[fds[i].fd] += buffer;
+                            std::cout << buffer;
+                        } else if (bytes_received == 0)
+						{
+                            // Déconnexion du client
+                            std::cout << "Client disconnected" << std::endl;
+                            close(fds[i].fd);
+                            fds.erase(fds.begin() + i);
+                        } else
+						{
+                            // Erreur de réception
+                            std::cerr << "Error receiving data from client" << std::endl;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
+
 
 int Server::manage_server()
 {

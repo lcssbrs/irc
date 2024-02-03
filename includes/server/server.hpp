@@ -3,7 +3,7 @@
 #include <iostream>
 #include <poll.h>
 #include <map>
-#include <list>
+#include <vector>
 #include <fcntl.h>
 #include "../client/client.hpp"
 #include <netdb.h>
@@ -13,6 +13,7 @@
 #include <exception>
 #include "../client/client.hpp"
 #include "../channel/channel.hpp"
+#include <unistd.h>
 
 #define backlog 42
 
@@ -26,7 +27,7 @@ class Server
 		int fd_server;
 		std::map<int, Client *> clients;
 		std::map<std::string, Channel *> channels;
-		std::list<struct pollfd> fds;
+		std::vector<struct pollfd> fds;
 		int port;
 
 	public:

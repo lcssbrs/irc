@@ -3,17 +3,17 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: hbaduel <hbaduel@student.42perpignan.fr    +#+  +:+       +#+         #
+#    By: lseiberr <lseiberr@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/22 11:56:27 by lseiberr          #+#    #+#              #
-#    Updated: 2024/02/02 15:25:12 by hbaduel          ###   ########.fr        #
+#    Updated: 2024/02/03 18:03:52 by lseiberr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= ircserver
 
 CC		= g++
-CFLAGS	= -Werror -Wextra -Wall -std=c++98
+CFLAGS	= -Werror -Wextra -Wall #-std=c++98
 
 SRC		= src/main.cpp src/server/server.cpp
 OBJ		= $(SRC:.cpp=.o)
