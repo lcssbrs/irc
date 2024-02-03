@@ -59,11 +59,28 @@ void Server::init_server()
 	this->fds.front().events = POLLIN;
 }
 
+static int get_line(int fd, std::string &line)
+{
+	char chr[2] = {0};
+	int readed = 0;
+	int total_read = 0;;
+	while ((readed = recv(fd,chr, 1, 0)) > 0){
+		total_read += readed;
+		std::string append(chr);
+		line += append;
+		if (chr[0] == '\n')
+			break;
+		memset(chr, 0, 2);
+	}
+	return total_read;
+}
+
 void Server::manage_loop()
 {
 	struct sockaddr	sin;
 	socklen_t len = sizeof(sin);
 	struct pollfd pollf;
+	std::string line[backlog];
 	while (1)
 	{
 		poll(&fds.front(), fds.size(), 1);
@@ -81,6 +98,9 @@ void Server::manage_loop()
 			itfds++;
 			while (itfds != fds.end())
 			{
+				int readed = get_line((*itfds).fd, line[(*itfds).fd]);
+				if (readed > 0)
+					std::cout << line[(*itfds).fd] << std::endl;
 				std::cout << (*itfds).fd << std::endl;
 				itfds++;
 			}
