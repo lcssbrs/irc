@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <cstring>
 #include <exception>
 #include "../client/client.hpp"
 #include "../channel/channel.hpp"

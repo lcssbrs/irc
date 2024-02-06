@@ -88,14 +88,10 @@ void Server::manage_loop()
 		this->fds.back().fd = accept(this->fd_server, &sin, &len);
 		if (this->fds.back().fd == -1)
 			std::cout << "fd pas valid\n";
-		else
-			std::cout << "yes\n";
 		this->fds.back().events = POLLIN;
 		if (fds.back().fd != fd_server)
 		{
-			std::cout << "test\n";
 			std::list<pollfd>::iterator itfds = fds.begin();
-			itfds++;
 			while (itfds != fds.end())
 			{
 				int readed = get_line((*itfds).fd, line[(*itfds).fd]);
@@ -114,22 +110,7 @@ int Server::manage_server()
 	{
 		init_server();
 	}
-	catch(BindException & e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit (1);
-	}
-	catch(SocketException & e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit(1);
-	}
-	catch(TCPException & e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit(1);
-	}
-	catch(ListenException & e)
+	catch(std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;
 		exit(1);
