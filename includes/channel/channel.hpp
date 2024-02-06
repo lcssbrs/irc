@@ -21,6 +21,7 @@ class Channel {
 
 		void	userJoin(Client *user);
 		int		userLeave(Client *user);
+		void	printClients(void);
 
 	private:
 		std::map<std::string, Client *>	_operators;
