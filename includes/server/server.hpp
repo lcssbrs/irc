@@ -3,7 +3,8 @@
 #include <iostream>
 #include <poll.h>
 #include <map>
-#include <list>
+#include <vector>
+#include <fcntl.h>
 #include "../client/client.hpp"
 #include <netdb.h>
 #include <netinet/in.h>
@@ -13,6 +14,7 @@
 #include <exception>
 #include "../client/client.hpp"
 #include "../channel/channel.hpp"
+#include <unistd.h>
 
 #define backlog 42
 
@@ -26,7 +28,7 @@ class Server
 		int fd_server;
 		std::map<int, Client *> clients;
 		std::map<std::string, Channel *> channels;
-		std::list<struct pollfd> fds;
+		std::vector<struct pollfd> fds;
 		int port;
 
 	public:
@@ -36,9 +38,10 @@ class Server
 		void init_server();
 		void manage_loop();
 		int manage_server();
-		void create_client(std::string & name);
+		void create_client(std::string & name, std::string & nickname);
 		void create_channel(std::string & name);
 		void remove_client_from_channel(Client * kick);
+		void parsing_msg(std::string & buffer);
 
 		class BindException: public std::exception
 		{
