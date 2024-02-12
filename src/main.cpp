@@ -46,6 +46,7 @@ int	main(int ac, char **ag)
 	channels[canal]->printClients();
 	channels[canal]->userJoin(channels[canal]->invite(clients[1], temp, clients));
 	channels[canal]->userJoin(channels[canal]->invite(clients[0], temp, clients));
+	channels[canal]->printClients();
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 		delete it->second;
 	delete channels[canal];

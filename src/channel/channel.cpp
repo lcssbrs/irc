@@ -24,17 +24,17 @@ Channel::~Channel(void) {}
 
 Client	*Channel::kick(Client *user, std::string &name)
 {
-	if (_operators.find(user->getNickname()) == _operators.end())
+	if (_operators.find(user->getNickname()) == _operators.end() or !_operators.find(user->getNickname())->second)
 	{
 		std::cout << "ERROR: user is not operator" << std::endl;
 		return (NULL); //error : user is not operator
 	}
-	else if (_operators.find(name) != _operators.end())
+	else if (_operators.find(name) != _operators.end() or _operators.find(user->getNickname())->second)
 	{
 		std::cout << "ERROR: cannot kick operator" << std::endl;
 		return (NULL); //error : cannot kick operator
 	}
-	else if (_regulars.find(name) == _regulars.end())
+	else if (_regulars.find(name) == _regulars.end() or !_regulars.find(name)->second)
 	{
 		std::cout << "ERROR: user doesn't exist/isn't in the channel" << std::endl;
 		return (NULL); //error: not a channel member
@@ -50,12 +50,12 @@ Client	*Channel::kick(Client *user, std::string &name)
 
 Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *> &clients)
 {
-	if (_operators.find(user->getNickname()) == _operators.end())
+	if (_operators.find(user->getNickname()) == _operators.end() or !_operators.find(user->getNickname())->second)
 	{
 		std::cout << "ERROR: user is not operator" << std::endl;
 		return (NULL); //error : user is not operator
 	}
-	else if (_regulars.find(name) != _regulars.end())
+	else if (_regulars.find(name) != _regulars.end() and _regulars.find(name)->second)
 	{
 		std::cout << "ERROR: User is already in the channel" << std::endl;
 		return (NULL); //error : invited user is already on the channel
