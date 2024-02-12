@@ -1,56 +1,68 @@
 NAME	= ircserver
 
-CC		= g++
-CFLAGS	= -Werror -Wextra -Wall -std=c++98
+CC		= c++
+
+FLAGS	= -Werror -Wextra -Wall -std=c++98
 
 SRC		= src/main.cpp src/server/server.cpp src/client/client.cpp src/channel/channel.cpp
-OBJ		= $(SRC:%.cpp=%.o)
 
-#Colors
+OBJS		= $(SRC:%.cpp=%.o)
 
-DEF_COLOR = \033[0;39m
-GRAY = \033[0;90m
-RED = \033[0;91m
-GREEN = \033[0;92m
-YELLOW = \033[0;93m
-BLUE = \033[0;94m
-MAGENTA = \033[0;95m
-CYAN = \033[0;96m
-WHITE = \033[0;97m
+# ------------------------------ Couleurs ------------------------------
 
-#Message
+BOLD_BLACK	=	\033[1;30m
 
-COMP_START      =       @printf "\n$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Debut de compilation...\r$(NO_COLOR)"
+BOLD_WHITE	=	\033[1;37m
 
-EXE_READY       =       @echo "\n\n$(BOLD)Compilation de $(BOLD_PURPLE)$(NAME)$(NO_COLOR) $(BOLD)reussi !$(NO_COLOR)\n"
+BOLD_RED	=	\033[1;31m
 
-CLEANED         =       @echo "\n$(BOLD_YELLOW)Clean: $(NO_COLOR)Suppression des fichiers .o et de l'executable \n"
+BOLD_PURPLE	=	\033[1;35m
 
-FCLEANED        =       @echo "\n$(BOLD_YELLOW)Fclean: $(NO_COLOR)Suppression des fichiers .o et de l'executable \n"
+BOLD_CYAN	=	\033[1;36m
+
+BOLD_GREEN	=	\033[1;32m
+
+BOLD_YELLOW	=	\033[1;33m
+
+BOLD_BLUE	=	\033[1;34m
+
+RESET	=	\033[0m
+
+# ------------------------------ Messages ------------------------------
+
+COMP_START	=	echo "\n💻 $(BOLD_PURPLE)$(NAME) $(BOLD_WHITE)by $(BOLD_BLUE)hbaduel$(BOLD_WHITE), $(BOLD_RED)lseiberr$(BOLD_WHITE), $(BOLD_YELLOW)aandrieux $(BOLD_WHITE)& $(BOLD_GREEN)tde-los\n"
+
+EXE_READY	=	echo "\n\n💬 $(BOLD_WHITE)Compilation de $(BOLD_BLUE)$(NAME)$(BOLD_GREEN) réussie !\n"
+
+CLEANED		=	echo "\n🗑️  $(BOLD_WHITE)Suppression des objets...\n"
+
+FCLEANED	=	echo "\n🗑️  $(BOLD_WHITE)Suppression des objets et de l'exécutable...\n"
+
+# ------------------------------ Regles ------------------------------
+
+MAKEFLAGS += --silent
 
 all: $(NAME)
 
-comp_start:
-	$(COMP_START)
-
-$(NAME): comp_start $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $@
-	$(EXE_READY)
-
 %.o: %.cpp
-	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)\r$(NO_COLOR)" $? $
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@printf "$(BOLD_YELLOW)Make: $(NO_COLOR)$(BOLD)Compilation des fichiers :$(BOLD_CYAN) %-33.33s $(BOLD_YELLOW)\r$(NO_COLOR)" $? $
+	@printf "$(RESET)🚧 $(BOLD_WHITE)Compilation des fichiers :$(BOLD_PURPLE) %-33.33s\r" $@
+	@$(CC) $(FLAGS) -c $< -o $@
+
+$(NAME): comp_lib $(OBJS)
+	@$(CC) $(FLAGS) -o $(NAME) $(OBJS)
+	@$(EXE_READY)
+
+comp_lib :
+	@$(COMP_START)
 
 clean:
-	@rm -rf $(OBJ)
 	$(CLEANED)
+	rm -rf $(OBJS)
 
-fclean: clean
-	@rm -rf $(NAME)
-	@rm -rf $(OBJ)
+fclean:
 	$(FCLEANED)
+	rm -rf $(NAME) $(OBJS)
 
 re: fclean all
 
-.PHONY: all re clean fclean
+.phony: all clean fclean
