@@ -6,7 +6,7 @@ FLAGS	= -Werror -Wextra -Wall -std=c++98
 
 SRC		= src/main.cpp src/server/server.cpp src/client/client.cpp src/channel/channel.cpp
 
-OBJS		= $(SRC:%.cpp=%.o)
+OBJS	= $(SRC:%.cpp=%.o)
 
 # ------------------------------ Couleurs ------------------------------
 
@@ -65,4 +65,4 @@ fclean:
 
 re: fclean all
 
-.phony: all clean fclean
+.phony: all clean fclean re
