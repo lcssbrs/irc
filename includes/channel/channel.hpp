@@ -19,9 +19,11 @@ class Channel {
 		void	topic(Client *user, std::string &topic);
 		void	mode(Client *user, std::string &option, std::string &arg);
 
-		void	userJoin(Client *user);
+		void	userJoin(Client *user, std::string password);
 		int		userLeave(Client *user);
 		void	printClients(void);
+		void	printStatus(void);
+
 
 	private:
 		std::map<std::string, Client *>	_operators;
