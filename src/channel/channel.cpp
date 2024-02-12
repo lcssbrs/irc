@@ -11,7 +11,7 @@ Channel::Channel(std::string &name, Client *creator) : _name(name)
 {
 	_operators[creator->getNickname()] = creator;
 	_regulars[creator->getNickname()] = creator;
-	_topic = "No topic set";
+	_topic = "";
 	_inviteOnly = false;
 	_restrictTopic = false;
 	_passwordUse = false;
@@ -24,23 +24,28 @@ Client	*Channel::kick(Client *user, std::string &name)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		std::cout << "ERROR: user is not operator" << std::endl;
-		return (NULL); //error : user is not operator
+		// 482 ERR_CHANOPRIVSNEEDED
+		return (NULL);
+	}
+	else if (name == "")
+	{
+		// 461 ERR_NEEDMOREPARAMS
+		return (NULL);
 	}
 	else if (_operators.find(name) != _operators.end())
 	{
-		std::cout << "ERROR: cannot kick operator" << std::endl;
-		return (NULL); //error : cannot kick operator
+		std::cout << "ERROR: cannot kick operator" << std::endl; //pas de code pour
+		return (NULL);
 	}
 	else if (_regulars.find(name) == _regulars.end())
 	{
-		std::cout << "ERROR: user doesn't exist/isn't in the channel" << std::endl;
-		return (NULL); //error: not a channel member
+		// 442 ERR_NOTONCHANNEL
+		return (NULL);
 	}
 	else if (_regulars[name] == user)
 	{
-		std::cout << "Error: user can't kick himself" << std::endl;
-		return (NULL); //error: user can't kick himself
+		std::cout << "Error: user can't kick himself" << std::endl; // pas de code pour
+		return (NULL);
 	}
 	Client *temp = _regulars[name];
 	_regulars.erase(name);
@@ -51,25 +56,38 @@ Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *>
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		std::cout << "ERROR: user is not operator" << std::endl;
-		return (NULL); //error : user is not operator
+		// 482 ERR_CHANOPRIVSNEEDED
+		return (NULL);
+	}
+	else if (name == "")
+	{
+		// 461 ERR_NEEDMOREPARAMS
+		return (NULL);
 	}
 	else if (_regulars.find(name) != _regulars.end())
 	{
-		std::cout << "ERROR: User is already in the channel" << std::endl;
-		return (NULL); //error : invited user is already on the channel
+		//443 ERR_USERONCHANNEL
+		return (NULL);
 	}
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->second->getNickname() == name)
+		{
+			// 341 RPL_INVITING
 			return (it->second);
+		}
 	}
-	std::cout << "ERROR: User is not on the server" << std::endl;
-	return (NULL); //error: invited user is not on the server
+	// 401 ERR_NOSUCHNICK
+	return (NULL);
 }
 
 void	Channel::topic(void) const
 {
+	if (_topic == "")
+	{
+		// 331 RPL_NOTOPIC
+		return ;
+	}
 	std::cout << _topic << std::endl;
 }
 
@@ -79,10 +97,9 @@ void	Channel::topic(Client *user, std::string &topic)
 	{
 		if (_operators.find(user->getNickname()) == _operators.end())
 		{
-			std::cout << "ERROR: only operator can change topic" << std::endl;
+			// 482 ERR_CHANOPRIVSNEEDED
 			return ;
 		}
-		//error: topic restricted and user not operator tried to change it
 	}
 	_topic = topic;
 }
@@ -91,8 +108,8 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		std::cout << "ERROR: user is not operator" << std::endl;
-		return ; //error: user is not operator
+		// 482 ERR_CHANOPRIVSNEEDED
+		return ;
 	}
 	if (option == "i")
 		_inviteOnly = !_inviteOnly;
@@ -100,8 +117,10 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		_restrictTopic = !_restrictTopic;
 	else if (option == "k")
 	{
-		_password = arg;
 		_passwordUse = !_passwordUse;
+		if (_passwordUse == true and arg == "")
+			return ; // 461 ERR_NEEDMOREPARAMS
+		_password = arg;
 	}
 	else if (option == "o")
 	{
@@ -110,25 +129,38 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		else if (_regulars.find(arg) != _regulars.end())
 			_operators[arg] = _regulars.find(arg)->second;
 		else
-			std::cout << "ERROR: client is not in the channel" << std::endl;
+		{
+			// 442 ERR_NOTONCHANNEL
+			return ;
+		}
 	}
 	else if (option == "l")
 	{
 		_limitUser = !_limitUser;
+		if (_limitUser == true and arg == "")
+			return ; // 461 ERR_NEEDMOREPARAMS
 		_nUser = atoi(arg.c_str());
 	}
+	else
+		return ;
+		// 472 ERR_UNKNOWNMODE
 }
 
 void	Channel::userJoin(Client *user, std::string password)
 {
 	if (_limitUser == true and static_cast<int>(_regulars.size()) == _nUser)
 	{
-		std::cout << "Channel user limit reached" << std::endl;
+		// 471 ERR_CHANNELISFULL
 		return ;
 	}
 	else if (_passwordUse == true and password != _password)
 	{
-		std::cout << "Wrong password" << std::endl;
+		// 475 ERR_BADCHANNELKEY
+		return ;
+	}
+	else if (_inviteOnly == true)
+	{
+		// 473 ERR_INVITEONLYCHAN
 		return ;
 	}
 	if (user)
