@@ -4,8 +4,6 @@ Client::Client(std::string nickname, std::string username, int fd) : _nickname(n
 {
 	isCreated = false;
 	pass = false;
-	nick = false;
-	user = false;
 	nbmsg = 0;
 }
 
@@ -41,31 +39,14 @@ const bool		&Client::getPass(void) const
 	return (pass);
 }
 
-const bool		&Client::getNick(void) const
-{
-	return (nick);
-}
-
-const bool		&Client::getUser(void) const
-{
-	return (user);
-}
-
 void				Client::setCreatedtoTrue(void)
 {
 	isCreated = true;
 }
+
 void				Client::setPasstoTrue(void)
 {
 	pass = true;
-}
-void				Client::setNicktoTrue(void)
-{
-	nick = true;
-}
-void				Client::setUsertoTrue(void)
-{
-	user = true;
 }
 
 void				Client::setNbmsgplusone(void)

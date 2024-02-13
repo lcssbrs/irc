@@ -113,7 +113,7 @@ void Server::manage_loop()
                             client_pollfd.events = POLLIN;
 							client_pollfd.revents = POLLIN;
                             fds.push_back(client_pollfd);
-							clients[client_fd] = new Client ("default", "default", client_fd);
+							clients[client_fd] = new Client ("", "", client_fd);
                         }
                     }
 					else
@@ -125,8 +125,8 @@ void Server::manage_loop()
 						{
                             // Traitement des données reçues
                             line[fds[i].fd] += buffer;
-							parsing_msg(buffer, fds[i].fd, fds, i);
-                            //std::cout << buffer;
+							if (buffer.compare(0, 6, "CAP LS") != 0)
+								parsing_msg(buffer, fds[i].fd, fds, i);
                         }
 						else if (bytes_received == 0)
 						{
@@ -176,60 +176,28 @@ void	Server::closeClient(Client & client, std::vector<struct pollfd> fds, int i)
 
 void Server::create_client(std::string & buffer, Client & client, std::vector<struct pollfd> fds, int i)
 {
-	if (client.getNbmsg() == 0 && client.getPass() == false && !buffer.compare(0, 4, "PASS"))
+	if (client.getNbmsg() < 2 and !buffer.compare(0, 6, "PASS :") and client.getPass() == false)
 	{
+		if (buffer.substr(6, buffer.size() - 7) != password)
+		{
+			closeClient(client, fds, i);
+			return ;
+		}
 		client.setPasstoTrue();
-		std::string tmp = buffer.substr(5, buffer.size() - 6);
-		if (tmp.compare(password) != 0)
-		{
-			closeClient(client, fds, i);
-			return ;
-		}
 	}
-	else if (client.getNbmsg() <= 1 && client.getNick() == false && !buffer.compare(0, 4, "NICK"))
+	else if (client.getNbmsg() < 2 and !buffer.compare(0, 4, "NICK") and client.getNickname() == "")
 	{
-		if (client.getPass() == false && client.getNbmsg() == 1)
-		{
-			closeClient(client, fds, i);
-			return ;
-		}
-		client.setNicktoTrue();
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
 	}
-	else if (client.getNbmsg() <= 2 && client.getUser() == false && client.getNick() == true && !buffer.compare(0, 4, "USER"))
+	else if (client.getNbmsg() == 2 && !buffer.compare(0, 4, "USER"))
 	{
-		if(client.getNick() == false && client.getNbmsg() == 2)
-		{
-			closeClient(client, fds, i);
-			return ;
-		}
-		client.setUsertoTrue();
 		client.setUsername(buffer.substr(5, buffer.size() - 6));
 		client.setCreatedtoTrue();
 		std::cout << client.getUsername() << std::endl;
 	}
-	else if (client.getNbmsg() == 1 && client.getNick() == false && client.getPass() == false)
-	{
+	else
 		closeClient(client, fds, i);
-		return ;
-	}
-	else if(client.getNbmsg() == 0 && client.getNick() == false && client.getPass() == false)
-	{
-		closeClient(client, fds, i);
-		return ;
-	}
-	else if(client.getNbmsg() == 1 && client.getNick() == false)
-	{
-		closeClient(client, fds, i);
-		return ;
-	}
-	else if (client.getNbmsg() == 2 && client.getUser() == false)
-	{
-		closeClient(client, fds, i);
-		return ;
-	}
-
 }
 
 void Server::create_channel(std::string & name)
