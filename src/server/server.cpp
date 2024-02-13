@@ -131,7 +131,7 @@ void Server::manage_loop()
 						else if (bytes_received == 0)
 						{
                             // Déconnexion du client
-                            std::cout << "Client " << clients.find(fds[i].fd)->second->getFd() << " disconnected" << std::endl;
+                            std::cout << "Client disconnected" << std::endl;
 							if (clients.find(fds[i].fd)->second->getNbmsg() > 0 && clients.find(fds[i].fd)->second->getNbmsg() < 3)
 							{
                             	close(fds[i].fd);
@@ -183,12 +183,18 @@ void Server::create_client(std::string & buffer, Client & client)
 		client.setPasstoTrue();
 		std::string tmp = buffer.substr(5, buffer.size() - 6);
 		if (tmp.compare(password) != 0)
+		{
 			closeClient(client);
+			return ;
+		}
 	}
 	else if (client.getNbmsg() <= 1 && client.getNick() == false && !buffer.compare(0, 4, "NICK"))
 	{
 		if (client.getPass() == false && client.getNbmsg() == 1)
+		{
 			closeClient(client);
+			return ;
+		}
 		client.setNicktoTrue();
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
@@ -196,7 +202,10 @@ void Server::create_client(std::string & buffer, Client & client)
 	else if (client.getNbmsg() <= 2 && client.getUser() == false && client.getNick() == true && !buffer.compare(0, 4, "USER"))
 	{
 		if(client.getNick() == false && client.getNbmsg() == 2)
+		{
 			closeClient(client);
+			return ;
+		}
 		client.setUsertoTrue();
 		client.setUsername(buffer.substr(5, buffer.size() - 6));
 		client.setCreatedtoTrue();
