@@ -1,7 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include <list>
+#include <map>
+#include <cstdlib>
 #include "../client/client.hpp"
 
 class Client;
@@ -10,15 +11,23 @@ class Channel {
 	public:
 		Channel(std::string &name, Client *creator);
 		~Channel(void);
-		void	kick(std::string &name);
-		void	invite(std::string &name);
-		void	topic(void);
-		void	topic(std::string &topic);
-		void	mode(std::string &option, std::string &arg);
+
+		//operators command
+		Client	*kick(Client *user, std::string &name);
+		Client	*invite(Client *user, std::string &name, std::map<int, Client *> &clients);
+		void	topic(void) const;
+		void	topic(Client *user, std::string &topic);
+		void	mode(Client *user, std::string &option, std::string &arg);
+
+		void	userJoin(Client *user, std::string password);
+		int		userLeave(Client *user);
+		void	printClients(void);
+		void	printStatus(void);
+
 
 	private:
-		std::list<Client *>	_operators;
-		std::list<Client *>	_regulars;
+		std::map<std::string, Client *>	_operators;
+		std::map<std::string, Client *>	_regulars;
 		std::string	_name;
 		bool	_inviteOnly;
 		bool	_restrictTopic;
@@ -27,5 +36,4 @@ class Channel {
 		std::string	_password;
 		bool	_limitUser;
 		int		_nUser;
-
 };

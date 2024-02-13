@@ -76,7 +76,8 @@ static int get_line(int fd, std::string &line)
 	return total_read;
 }
 
-void Server::manage_loop() {
+void Server::manage_loop()
+{
     struct sockaddr_in sin;
     socklen_t len = sizeof(sin);
     std::string line[backlog]; // Tableau de lignes pour chaque descripteur de fichier
@@ -125,6 +126,7 @@ void Server::manage_loop() {
 							}
 							iscreated = true;
                             line[fds[i].fd] += buffer;
+							parsing_msg(buffer, fds[i].fd);
                             std::cout << buffer;
                         }
 						else if (bytes_received == 0)
@@ -139,8 +141,7 @@ void Server::manage_loop() {
                             // Erreur de réception
                             std::cerr << "Error receiving data from client" << std::endl;
                     	}
-						//clear buffer pour effacer les messages a chaque fois
-						buffer.clear();
+					}
                 }
             }
         }
@@ -180,7 +181,14 @@ void Server::remove_client_from_channel(Client * kick)
 	(void)kick;
 }
 
-void Server::parsing_msg(std::string & buffer)
+void Server::parsing_msg(std::string & buffer, int fd)
 {
 	(void)buffer;
+	std::map<int, Client *>::iterator findclient;
+
+	findclient = clients.find(fd);
+	if (findclient != clients.end())
+	{
+		findclient->second->getNickname();
+	}
 }
