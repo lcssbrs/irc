@@ -235,11 +235,22 @@ void Server::create_client(std::string & buffer, Client & client, std::vector<st
 void Server::create_channel(std::string & name)
 {
 	(void)name;
+	std::cout << "channel " << name << " created\n";
 }
 
 void Server::remove_client_from_channel(Client * kick)
 {
 	(void)kick;
+}
+
+void Server::check_command(std::string buffer, Client * client)
+{
+	(void)client;
+	if (buffer.compare(0, 1, "!") == 0)
+	{
+		std::string name = buffer.substr(1, buffer.size() - 1);
+		create_channel(name);
+	}
 }
 
 void Server::parsing_msg(std::string & buffer, int fd, std::vector<struct pollfd> fds, int i)
@@ -253,7 +264,10 @@ void Server::parsing_msg(std::string & buffer, int fd, std::vector<struct pollfd
 		if (clients.find(fd) != clients.end() && findclient->second->getCreated() == false)
 			create_client(buffer, (*findclient->second), fds, i);
 		else if (clients.find(fd) != clients.end() && clients.find(fd)->second->getCreated() == true)
+		{
+			check_command(buffer, findclient->second);
 			std::cout << buffer;
+		}
 		if (clients.find(fd) != clients.end())
 			(*findclient->second).setNbmsgplusone();
 	}
