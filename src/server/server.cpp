@@ -179,6 +179,11 @@ void Server::create_client(std::string & buffer, Client & client)
 		client.setCreatedtoTrue();
 		std::cout << "MONSTRE\n";
 	}
+	else if (client.getNbmsg() >= 3)
+	{
+		std::cerr << "Wrong message for client " << client.getFd() << std::endl;
+		close(client.getFd());
+	}
 }
 
 void Server::create_channel(std::string & name)
