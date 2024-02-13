@@ -124,7 +124,7 @@ void Server::manage_loop()
 						{
                             // Traitement des données reçues
                             line[fds[i].fd] += buffer;
-							parsing_msg(buffer, fds[i].fd);
+							parsing_msg(buffer, fds[i].fd, fds, i);
                             //std::cout << buffer;
                         }
 						else if (bytes_received == 0)
@@ -163,16 +163,17 @@ int Server::manage_server()
 	return (0);
 }
 
-void	Server::closeClient(Client & client)
+void	Server::closeClient(Client & client, std::vector<struct pollfd> fds, int i)
 {
 	int fd = client.getFd();
 	std::cerr << "Client disconnected " << client.getFd() << std::endl;
 	close(client.getFd());
 	delete (&client);
 	clients.erase(clients.find(fd));
+	fds.erase(fds.begin() + i);
 }
 
-void Server::create_client(std::string & buffer, Client & client)
+void Server::create_client(std::string & buffer, Client & client, std::vector<struct pollfd> fds, int i)
 {
 	if (client.getNbmsg() == 0 && client.getPass() == false && !buffer.compare(0, 4, "PASS"))
 	{
@@ -180,7 +181,7 @@ void Server::create_client(std::string & buffer, Client & client)
 		std::string tmp = buffer.substr(5, buffer.size() - 6);
 		if (tmp.compare(password) != 0)
 		{
-			closeClient(client);
+			closeClient(client, fds, i);
 			return ;
 		}
 	}
@@ -188,7 +189,7 @@ void Server::create_client(std::string & buffer, Client & client)
 	{
 		if (client.getPass() == false && client.getNbmsg() == 1)
 		{
-			closeClient(client);
+			closeClient(client, fds, i);
 			return ;
 		}
 		client.setNicktoTrue();
@@ -199,7 +200,7 @@ void Server::create_client(std::string & buffer, Client & client)
 	{
 		if(client.getNick() == false && client.getNbmsg() == 2)
 		{
-			closeClient(client);
+			closeClient(client, fds, i);
 			return ;
 		}
 		client.setUsertoTrue();
@@ -209,22 +210,22 @@ void Server::create_client(std::string & buffer, Client & client)
 	}
 	else if (client.getNbmsg() == 1 && client.getNick() == false && client.getPass() == false)
 	{
-		closeClient(client);
+		closeClient(client, fds, i);
 		return ;
 	}
 	else if(client.getNbmsg() == 0 && client.getNick() == false && client.getPass() == false)
 	{
-		closeClient(client);
+		closeClient(client, fds, i);
 		return ;
 	}
 	else if(client.getNbmsg() == 1 && client.getNick() == false)
 	{
-		closeClient(client);
+		closeClient(client, fds, i);
 		return ;
 	}
 	else if (client.getNbmsg() == 2 && client.getUser() == false)
 	{
-		closeClient(client);
+		closeClient(client, fds, i);
 		return ;
 	}
 
@@ -240,7 +241,7 @@ void Server::remove_client_from_channel(Client * kick)
 	(void)kick;
 }
 
-void Server::parsing_msg(std::string & buffer, int fd)
+void Server::parsing_msg(std::string & buffer, int fd, std::vector<struct pollfd> fds, int i)
 {
 	(void)buffer;
 	std::map<int, Client *>::iterator findclient;
@@ -249,7 +250,7 @@ void Server::parsing_msg(std::string & buffer, int fd)
 	if (findclient != clients.end())
 	{
 		if (clients.find(fd) != clients.end() && findclient->second->getCreated() == false)
-			create_client(buffer, (*findclient->second));
+			create_client(buffer, (*findclient->second), fds, i);
 		else if (clients.find(fd) != clients.end() && clients.find(fd)->second->getCreated() == true)
 			std::cout << buffer;
 		if (clients.find(fd) != clients.end())
