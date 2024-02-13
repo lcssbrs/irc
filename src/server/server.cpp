@@ -130,10 +130,13 @@ void Server::manage_loop()
 						{
                             // Déconnexion du client
                             std::cout << "Client " << clients.find(fds[i].fd)->second->getFd() << " disconnected" << std::endl;
-                            close(fds[i].fd);
-							delete (clients.find(fds[i].fd)->second);
-							clients.erase(fds[i].fd);
-                            fds.erase(fds.begin() + i);
+							if (clients.find(fds[i].fd)->second->getNbmsg() > 0 && clients.find(fds[i].fd)->second->getNbmsg() < 3)
+							{
+                            	close(fds[i].fd);
+								delete (clients.find(fds[i].fd)->second);
+								clients.erase(fds[i].fd);
+                            	fds.erase(fds.begin() + i);
+							}
                         }
 						else
 						{
