@@ -128,7 +128,7 @@ void Server::manage_loop()
 							if (buffer.compare(0, 6, "CAP LS") != 0)
 								parsing_msg(buffer, fds[i].fd, fds, i);
                         }
-						else if (bytes_received == 0)
+						else if (bytes_received == 0 && !fds.[i].fd)
 						{
                             // Déconnexion du client
                             std::cout << "Client disconnected" << std::endl;
@@ -200,10 +200,10 @@ void Server::create_client(std::string & buffer, Client & client, std::vector<st
 		closeClient(client, fds, i);
 }
 
-void Server::create_channel(std::string & name)
+void Server::create_channel(std::string & name, Client * client)
 {
-	(void)name;
-	std::cout << "channel " << name << " created\n";
+	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
+
 }
 
 void Server::remove_client_from_channel(Client * kick)
@@ -213,11 +213,10 @@ void Server::remove_client_from_channel(Client * kick)
 
 void Server::check_command(std::string buffer, Client * client)
 {
-	(void)client;
 	if (buffer.compare(0, 1, "!") == 0)
 	{
-		std::string name = buffer.substr(1, buffer.size() - 1);
-		create_channel(name);
+		std::string name = buffer.substr(1, buffer.size() - 2);
+		create_channel(name, client);
 	}
 }
 
@@ -234,7 +233,7 @@ void Server::parsing_msg(std::string & buffer, int fd, std::vector<struct pollfd
 		else if (clients.find(fd) != clients.end() && clients.find(fd)->second->getCreated() == true)
 		{
 			check_command(buffer, findclient->second);
-			std::cout << buffer;
+			//std::cout << buffer;
 		}
 		if (clients.find(fd) != clients.end())
 			(*findclient->second).setNbmsgplusone();
