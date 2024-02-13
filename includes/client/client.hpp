@@ -9,8 +9,6 @@ class Client {
 		int		_fd;
 		bool	isCreated;
 		bool	pass;
-		bool	nick;
-		bool	user;
 		int		nbmsg;
 
 	public:
@@ -23,14 +21,12 @@ class Client {
 		const std::string	&getUsername(void) const;
 		const bool			&getCreated(void) const;
 		const int			&getFd(void) const;
-		const bool		&getUser(void) const;
-		const bool		&getNick(void) const;
 		const bool		&getPass(void) const;
 		const int		&getNbmsg(void) const;
+
+		//setters
 		void				setCreatedtoTrue(void);
 		void				setPasstoTrue(void);
-		void				setNicktoTrue(void);
-		void				setUsertoTrue(void);
 		void				setNbmsgplusone(void);
 		void				setNickname(const std::string &nick);
 		void				setUsername(const std::string &user);

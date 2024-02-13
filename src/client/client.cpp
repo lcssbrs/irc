@@ -1,6 +1,11 @@
 #include "../../includes/client/client.hpp"
 
-Client::Client(std::string nick, std::string user, int fd) : _nickname(nick), _username(user), _fd(fd), isCreated(false), pass(false), nick(false), user(false), nbmsg(0){}
+Client::Client(std::string nickname, std::string username, int fd) : _nickname(nickname), _username(username), _fd(fd)
+{
+	isCreated = false;
+	pass = false;
+	nbmsg = 0;
+}
 
 Client::~Client(void) {}
 
@@ -34,31 +39,14 @@ const bool		&Client::getPass(void) const
 	return (pass);
 }
 
-const bool		&Client::getNick(void) const
-{
-	return (nick);
-}
-
-const bool		&Client::getUser(void) const
-{
-	return (user);
-}
-
 void				Client::setCreatedtoTrue(void)
 {
 	isCreated = true;
 }
+
 void				Client::setPasstoTrue(void)
 {
 	pass = true;
-}
-void				Client::setNicktoTrue(void)
-{
-	nick = true;
-}
-void				Client::setUsertoTrue(void)
-{
-	user = true;
 }
 
 void				Client::setNbmsgplusone(void)
