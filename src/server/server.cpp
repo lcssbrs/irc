@@ -183,6 +183,9 @@ void Server::create_client(std::string & buffer, Client & client)
 	{
 		std::cerr << "Wrong message for client " << client.getFd() << std::endl;
 		close(client.getFd());
+		int fd = client.getFd();
+		delete (&client);
+		clients.erase(fd);
 	}
 }
 
