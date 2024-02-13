@@ -39,20 +39,11 @@ class Server
 		void init_server();
 		void manage_loop();
 		int manage_server();
-<<<<<<< HEAD
-		void create_client(std::string & buffer, Client & client, std::vector<struct pollfd> fds, int i);
-		void create_channel(std::string & name, client * client);
-		void remove_client_from_channel(Client * kick);
-		void parsing_msg(std::string & buffer, int fd, std::vector<struct pollfd> fds, int i);
-		void closeClient(Client & client, std::vector<struct pollfd> fds, int i);
-		void check_command(std::string buffer, Client * client);
-=======
 		void create_client(std::string & buffer, Client & client, int i);
 		void create_channel(std::string & name);
 		void remove_client_from_channel(Client * kick);
 		void parsing_msg(std::string & buffer, int fd, int i);
 		void closeClient(Client & client, int i);
->>>>>>> hugo
 
 		class BindException: public std::exception
 		{
