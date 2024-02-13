@@ -16,6 +16,8 @@ Channel::Channel(std::string &name, Client *creator) : _name(name)
 	_restrictTopic = false;
 	_passwordUse = false;
 	_limitUser = false;
+	_password = "";
+	_nUser = 0;
 }
 
 Channel::~Channel(void) {}
@@ -24,27 +26,27 @@ Client	*Channel::kick(Client *user, std::string &name)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		// 482 ERR_CHANOPRIVSNEEDED
+		write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
 		return (NULL);
 	}
 	else if (name == "")
 	{
-		// 461 ERR_NEEDMOREPARAMS
+		write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
 		return (NULL);
 	}
 	else if (_operators.find(name) != _operators.end())
 	{
-		std::cout << "ERROR: cannot kick operator" << std::endl; //pas de code pour
+		write(user->getFd(), "ERROR: You can't kick an operator", 30);
 		return (NULL);
 	}
 	else if (_regulars.find(name) == _regulars.end())
 	{
-		// 442 ERR_NOTONCHANNEL
+		write(user->getFd(), "442 ERR_NOTONCHANNEL", 20);
 		return (NULL);
 	}
 	else if (_regulars[name] == user)
 	{
-		std::cout << "Error: user can't kick himself" << std::endl; // pas de code pour
+		write(user->getFd(), "ERROR: You can't kick yourself", 30);
 		return (NULL);
 	}
 	Client *temp = _regulars[name];
@@ -56,39 +58,39 @@ Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *>
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		// 482 ERR_CHANOPRIVSNEEDED
+		write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
 		return (NULL);
 	}
 	else if (name == "")
 	{
-		// 461 ERR_NEEDMOREPARAMS
+		write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
 		return (NULL);
 	}
 	else if (_regulars.find(name) != _regulars.end())
 	{
-		//443 ERR_USERONCHANNEL
+		write(user->getFd(), "443 ERR_USERONCHANNEL", 21);
 		return (NULL);
 	}
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->second->getNickname() == name)
 		{
-			// 341 RPL_INVITING
+			write(user->getFd(), "341 RPL_INVITING", 16);
 			return (it->second);
 		}
 	}
-	// 401 ERR_NOSUCHNICK
+	write(user->getFd(), "401 ERR_NOSUCHNICK", 18);
 	return (NULL);
 }
 
-void	Channel::topic(void) const
+void	Channel::topic(Client *user) const
 {
 	if (_topic == "")
 	{
-		// 331 RPL_NOTOPIC
+		write(user->getFd(), "331 RPL_NOTOPIC", 15);
 		return ;
 	}
-	std::cout << _topic << std::endl;
+	write(user->getFd(), _topic.c_str(), _topic.size());
 }
 
 void	Channel::topic(Client *user, std::string &topic)
@@ -97,7 +99,7 @@ void	Channel::topic(Client *user, std::string &topic)
 	{
 		if (_operators.find(user->getNickname()) == _operators.end())
 		{
-			// 482 ERR_CHANOPRIVSNEEDED
+			write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
 			return ;
 		}
 	}
@@ -108,7 +110,7 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		// 482 ERR_CHANOPRIVSNEEDED
+		write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
 		return ;
 	}
 	if (option == "i")
@@ -119,7 +121,11 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 	{
 		_passwordUse = !_passwordUse;
 		if (_passwordUse == true and arg == "")
-			return ; // 461 ERR_NEEDMOREPARAMS
+		{
+			write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
+			_passwordUse = !_passwordUse;
+			return ;
+		}
 		_password = arg;
 	}
 	else if (option == "o")
@@ -130,37 +136,56 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 			_operators[arg] = _regulars.find(arg)->second;
 		else
 		{
-			// 442 ERR_NOTONCHANNEL
+			write(user->getFd(), "442 ERR_NOTONCHANNEL", 20);
 			return ;
 		}
 	}
 	else if (option == "l")
 	{
 		_limitUser = !_limitUser;
-		if (_limitUser == true and arg == "")
-			return ; // 461 ERR_NEEDMOREPARAMS
-		_nUser = atoi(arg.c_str());
+		if (_limitUser == true)
+		{
+			if (arg == "")
+			{
+				write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
+				_limitUser = !_limitUser;
+				return ;
+			}
+			int i = atoi(arg.c_str());
+			if (i <= 0)
+			{
+				write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than 0)", 54);
+				_limitUser = !_limitUser;
+				return ;
+			}
+			else if (i < static_cast<int>(_regulars.size()))
+			{
+				write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than the number of the channel's clients)", 88);
+				_limitUser = !_limitUser;
+				return ;
+			}
+			_nUser = i;
+		}
 	}
 	else
-		return ;
-		// 472 ERR_UNKNOWNMODE
+		write(user->getFd(), "472 ERR_UNKNOWNMODE", 19);
 }
 
 void	Channel::userJoin(Client *user, std::string password)
 {
 	if (_limitUser == true and static_cast<int>(_regulars.size()) == _nUser)
 	{
-		// 471 ERR_CHANNELISFULL
+		write(user->getFd(), "471 ERR_CHANNELISFULL", 21);
 		return ;
 	}
 	else if (_passwordUse == true and password != _password)
 	{
-		// 475 ERR_BADCHANNELKEY
+		write(user->getFd(), "475 ERR_BADCHANNELKEY", 21);
 		return ;
 	}
 	else if (_inviteOnly == true)
 	{
-		// 473 ERR_INVITEONLYCHAN
+		write(user->getFd(), "473 ERR_INVITEONLYCHAN", 22);
 		return ;
 	}
 	if (user)

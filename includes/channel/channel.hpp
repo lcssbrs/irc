@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <cstdlib>
+#include <unistd.h>
 #include "../client/client.hpp"
 
 class Client;
@@ -15,7 +16,7 @@ class Channel {
 		//operators command
 		Client	*kick(Client *user, std::string &name);
 		Client	*invite(Client *user, std::string &name, std::map<int, Client *> &clients);
-		void	topic(void) const;
+		void	topic(Client *user) const;
 		void	topic(Client *user, std::string &topic);
 		void	mode(Client *user, std::string &option, std::string &arg);
 
