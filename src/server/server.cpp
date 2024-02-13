@@ -102,12 +102,14 @@ void Server::manage_loop()
                         if (client_fd == -1)
 						{
                             std::cerr << "Error accepting connection" << std::endl;
-                        } else
+                        }
+						else
 						{
                             // Ajouter le nouveau client à la liste des descripteurs de fichiers à surveiller
                             struct pollfd client_pollfd;
                             client_pollfd.fd = client_fd;
                             client_pollfd.events = POLLIN;
+							client_pollfd.revents = POLLIN;
                             fds.push_back(client_pollfd);
 							clients[client_fd] = new Client ("default", "default", client_fd);
                         }

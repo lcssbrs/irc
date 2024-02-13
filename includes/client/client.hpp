@@ -27,6 +27,8 @@ class Client {
 		const bool		&getNick(void) const;
 		const bool		&getPass(void) const;
 		const int		&getNbmsg(void) const;
+
+		//setters
 		void				setCreatedtoTrue(void);
 		void				setPasstoTrue(void);
 		void				setNicktoTrue(void);
