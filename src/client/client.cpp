@@ -65,3 +65,13 @@ void				Client::setNbmsgplusone(void)
 {
 	nbmsg += 1;
 }
+
+void				Client::setNickname(const std::string &nick)
+{
+	_nickname = nick;
+}
+
+void				Client::setUsername(const std::string &user)
+{
+	_username = user;
+}

@@ -169,8 +169,9 @@ void Server::create_client(std::string & buffer, Client & client)
 	else if (client.getNbmsg() <= 1 && client.getNick() == false && !buffer.compare(0, 4, "NICK"))
 	{
 		client.setNicktoTrue();
+		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		//client.setNbmsgplusone();
-		std::cout << "ca martche aussi\n";
+		std::cout << client.getNickname() << std::endl;
 	}
 	else if (client.getNbmsg() <= 2 && client.getUser() == false && client.getNick() == true && !buffer.compare(0, 4, "USER"))
 	{
@@ -209,6 +210,8 @@ void Server::parsing_msg(std::string & buffer, int fd)
 	{
 		if (findclient->second->getCreated() == false)
 			create_client(buffer, (*findclient->second));
+		else
+			std::cout << buffer;
 		(*findclient->second).setNbmsgplusone();
 	}
 	else

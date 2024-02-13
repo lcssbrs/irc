@@ -32,4 +32,6 @@ class Client {
 		void				setNicktoTrue(void);
 		void				setUsertoTrue(void);
 		void				setNbmsgplusone(void);
+		void				setNickname(const std::string &nick);
+		void				setUsername(const std::string &user);
 };
