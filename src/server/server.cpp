@@ -124,7 +124,8 @@ void Server::manage_loop()
 						{
                             // Traitement des données reçues
                             line[fds[i].fd] += buffer;
-							parsing_msg(buffer, fds[i].fd, fds, i);
+							if (!buffer.compare(0, 6, "CAP LS"))
+								parsing_msg(buffer, fds[i].fd, fds, i);
                             //std::cout << buffer;
                         }
 						else if (bytes_received == 0)
@@ -175,7 +176,7 @@ void	Server::closeClient(Client & client, std::vector<struct pollfd> fds, int i)
 
 void Server::create_client(std::string & buffer, Client & client, std::vector<struct pollfd> fds, int i)
 {
-	if (client.getNbmsg() == 0 && client.getPass() == false && !buffer.compare(0, 4, "PASS"))
+	if (client.getNbmsg() == 0 && client.getPass() == false && !buffer.compare(0, 6, "PASS :"))
 	{
 		client.setPasstoTrue();
 		std::string tmp = buffer.substr(5, buffer.size() - 6);
