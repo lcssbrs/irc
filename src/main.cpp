@@ -14,7 +14,7 @@ void checkarg(char **ag, int ac)
 int	main(int ac, char **ag)
 {
 	checkarg(ag, ac);
-	Server serv(atoi(ag[1]));
+	Server serv(atoi(ag[1]), ag[2]);
 	serv.manage_server();
 
 	// (void)ac; //main pour test channels functions sans serveur

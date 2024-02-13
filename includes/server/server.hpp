@@ -30,9 +30,10 @@ class Server
 		std::map<std::string, Channel *> channels;
 		std::vector<struct pollfd> fds;
 		int port;
+		std::string password;
 
 	public:
-		Server(int port);
+		Server(int port, std::string pass);
 		~Server();
 
 		void init_server();
@@ -42,6 +43,7 @@ class Server
 		void create_channel(std::string & name);
 		void remove_client_from_channel(Client * kick);
 		void parsing_msg(std::string & buffer, int fd);
+		void closeClient(Client & client);
 
 		class BindException: public std::exception
 		{

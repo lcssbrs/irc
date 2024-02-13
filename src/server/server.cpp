@@ -1,8 +1,9 @@
 #include "../../includes/server/server.hpp"
 
-Server::Server(int port)
+Server::Server(int port, std::string pass)
 {
 	this->port = port;
+	this->password = pass;
 	this->fds.clear();
 }
 
@@ -81,6 +82,7 @@ void Server::manage_loop()
     struct sockaddr_in sin;
     socklen_t len = sizeof(sin);
     std::string line[backlog]; // Tableau de lignes pour chaque descripteur de fichier
+	line->clear();
     while (true)
 	{
         int num_events = poll(&fds.front(), fds.size(), -1);
@@ -127,8 +129,10 @@ void Server::manage_loop()
 						else if (bytes_received == 0)
 						{
                             // Déconnexion du client
-                            std::cout << "Client disconnected" << std::endl;
+                            std::cout << "Client " << clients.find(fds[i].fd)->second->getFd() << " disconnected" << std::endl;
                             close(fds[i].fd);
+							delete (clients.find(fds[i].fd)->second);
+							clients.erase(fds[i].fd);
                             fds.erase(fds.begin() + i);
                         }
 						else
@@ -158,36 +162,43 @@ int Server::manage_server()
 	return (0);
 }
 
+void	Server::closeClient(Client & client)
+{
+	int fd = client.getFd();
+	std::cerr << "Wrong message for client " << client.getFd() << std::endl;
+	close(client.getFd());
+	delete (&client);
+	clients.erase(clients.find(fd));
+}
+
 void Server::create_client(std::string & buffer, Client & client)
 {
 	if (client.getNbmsg() == 0 && client.getPass() == false && !buffer.compare(0, 4, "PASS"))
 	{
 		client.setPasstoTrue();
-		//client.setNbmsgplusone();
-		std::cout << "CA MARCHE\n";
+		std::string tmp = buffer.substr(5, buffer.size() - 6);
+		if (tmp.compare(password) != 0)
+			closeClient(client);
 	}
 	else if (client.getNbmsg() <= 1 && client.getNick() == false && !buffer.compare(0, 4, "NICK"))
 	{
+		if (client.getPass() == false && client.getNbmsg() == 1)
+			closeClient(client);
 		client.setNicktoTrue();
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
-		//client.setNbmsgplusone();
 		std::cout << client.getNickname() << std::endl;
 	}
 	else if (client.getNbmsg() <= 2 && client.getUser() == false && client.getNick() == true && !buffer.compare(0, 4, "USER"))
 	{
+		if(client.getNick() == false && client.getNbmsg() == 2)
+			closeClient(client);
 		client.setUsertoTrue();
-		//client.setNbmsgplusone();
+		client.setUsername(buffer.substr(5, buffer.size() - 6));
 		client.setCreatedtoTrue();
-		std::cout << "MONSTRE\n";
+		std::cout << client.getUsername() << std::endl;
 	}
 	else if (client.getNbmsg() >= 3)
-	{
-		std::cerr << "Wrong message for client " << client.getFd() << std::endl;
-		close(client.getFd());
-		int fd = client.getFd();
-		delete (&client);
-		clients.erase(fd);
-	}
+		closeClient(client);
 }
 
 void Server::create_channel(std::string & name)
@@ -212,7 +223,8 @@ void Server::parsing_msg(std::string & buffer, int fd)
 			create_client(buffer, (*findclient->second));
 		else
 			std::cout << buffer;
-		(*findclient->second).setNbmsgplusone();
+		if (clients.find(fd) != clients.end())
+			(*findclient->second).setNbmsgplusone();
 	}
 	else
 		std::cout << "Client not found\n";
