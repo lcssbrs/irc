@@ -19,4 +19,5 @@ class Client {
 		const std::string	&getUsername(void) const;
 		const bool		&getCreated(void) const;
 		const int			&getFd(void) const;
+		void				setCreatedtoTrue(void)const;
 };

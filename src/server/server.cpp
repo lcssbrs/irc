@@ -120,14 +120,9 @@ void Server::manage_loop()
                         if (bytes_received > 0)
 						{
                             // Traitement des données reçues
-							if (iscreated == false)
-							{
-
-							}
-							iscreated = true;
                             line[fds[i].fd] += buffer;
 							parsing_msg(buffer, fds[i].fd);
-                            std::cout << buffer;
+                            //std::cout << buffer;
                         }
 						else if (bytes_received == 0)
 						{
@@ -148,8 +143,6 @@ void Server::manage_loop()
     }
 }
 
-
-
 int Server::manage_server()
 {
 	try
@@ -165,10 +158,14 @@ int Server::manage_server()
 	return (0);
 }
 
-void Server::create_client(std::string & name, std::string & nickname)
+void Server::create_client(std::string & buffer)
 {
-	(void)name;
-	(void)nickname;
+	static int i;
+	if (i == 0 && !buffer.compare(0, 4, "PASS"))
+		std::cout << "CA MARCHE\n";
+	else if ((i == 0 || i == 1) && !buffer.compare(0, 4, "NICK"))
+		std::cout << "ca martche aussi\n";
+	i++;
 }
 
 void Server::create_channel(std::string & name)
@@ -189,6 +186,10 @@ void Server::parsing_msg(std::string & buffer, int fd)
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{
-		findclient->second->getNickname();
+		if (findclient->second->getCreated() == false)
+			create_client(buffer);
 	}
+	else
+		std::cout << "Client not found\n";
 }
+
