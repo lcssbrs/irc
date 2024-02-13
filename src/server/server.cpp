@@ -88,7 +88,6 @@ void Server::manage_loop() {
             std::cerr << "Error in poll" << std::endl;
             break;
         }
-
         if (num_events > 0)
 		{
             for (size_t i = 0; i < fds.size(); ++i)
@@ -109,8 +108,10 @@ void Server::manage_loop() {
                             client_pollfd.fd = client_fd;
                             client_pollfd.events = POLLIN;
                             fds.push_back(client_pollfd);
+							clients[client_fd] = new Client ("default", "default", client_fd);
                         }
-                    } else
+                    }
+					else
 					{
                         // Données disponibles sur un client existant
                         std::string buffer;
@@ -118,6 +119,11 @@ void Server::manage_loop() {
                         if (bytes_received > 0)
 						{
                             // Traitement des données reçues
+							if (iscreated == false)
+							{
+
+							}
+							iscreated = true;
                             line[fds[i].fd] += buffer;
                             std::cout << buffer;
                         }
@@ -132,8 +138,9 @@ void Server::manage_loop() {
 						{
                             // Erreur de réception
                             std::cerr << "Error receiving data from client" << std::endl;
-                        }
-                    }
+                    	}
+						//clear buffer pour effacer les messages a chaque fois
+						buffer.clear();
                 }
             }
         }
@@ -148,10 +155,10 @@ int Server::manage_server()
 	{
 		init_server();
 	}
-	catch(std::exception & e)
+	catch(std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;
-		exit (1);
+		exit(1);
 	}
 	manage_loop();
 	return (0);
