@@ -110,6 +110,7 @@ void Server::manage_loop()
                             struct pollfd client_pollfd;
                             client_pollfd.fd = client_fd;
                             client_pollfd.events = POLLIN;
+							client_pollfd.revents = POLLIN;
                             fds.push_back(client_pollfd);
 							clients[client_fd] = new Client ("default", "default", client_fd);
                         }
@@ -129,14 +130,11 @@ void Server::manage_loop()
 						else if (bytes_received == 0)
 						{
                             // Déconnexion du client
-                            std::cout << "Client " << clients.find(fds[i].fd)->second->getFd() << " disconnected" << std::endl;
-							if (clients.find(fds[i].fd)->second->getNbmsg() > 0 && clients.find(fds[i].fd)->second->getNbmsg() < 3)
-							{
-                            	close(fds[i].fd);
-								delete (clients.find(fds[i].fd)->second);
-								clients.erase(fds[i].fd);
-                            	fds.erase(fds.begin() + i);
-							}
+                            std::cout << "Client disconnected" << std::endl;
+                            close(fds[i].fd);
+							delete (clients.find(fds[i].fd)->second);
+							clients.erase(fds[i].fd);
+                            fds.erase(fds.begin() + i);
                         }
 						else
 						{
@@ -168,7 +166,7 @@ int Server::manage_server()
 void	Server::closeClient(Client & client)
 {
 	int fd = client.getFd();
-	std::cerr << "Wrong message for client " << client.getFd() << std::endl;
+	std::cerr << "Client disconnected " << client.getFd() << std::endl;
 	close(client.getFd());
 	delete (&client);
 	clients.erase(clients.find(fd));
@@ -181,12 +179,18 @@ void Server::create_client(std::string & buffer, Client & client)
 		client.setPasstoTrue();
 		std::string tmp = buffer.substr(5, buffer.size() - 6);
 		if (tmp.compare(password) != 0)
+		{
 			closeClient(client);
+			return ;
+		}
 	}
 	else if (client.getNbmsg() <= 1 && client.getNick() == false && !buffer.compare(0, 4, "NICK"))
 	{
 		if (client.getPass() == false && client.getNbmsg() == 1)
+		{
 			closeClient(client);
+			return ;
+		}
 		client.setNicktoTrue();
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
@@ -194,14 +198,36 @@ void Server::create_client(std::string & buffer, Client & client)
 	else if (client.getNbmsg() <= 2 && client.getUser() == false && client.getNick() == true && !buffer.compare(0, 4, "USER"))
 	{
 		if(client.getNick() == false && client.getNbmsg() == 2)
+		{
 			closeClient(client);
+			return ;
+		}
 		client.setUsertoTrue();
 		client.setUsername(buffer.substr(5, buffer.size() - 6));
 		client.setCreatedtoTrue();
 		std::cout << client.getUsername() << std::endl;
 	}
-	else if (client.getNbmsg() >= 3)
+	else if (client.getNbmsg() == 1 && client.getNick() == false && client.getPass() == false)
+	{
 		closeClient(client);
+		return ;
+	}
+	else if(client.getNbmsg() == 0 && client.getNick() == false && client.getPass() == false)
+	{
+		closeClient(client);
+		return ;
+	}
+	else if(client.getNbmsg() == 1 && client.getNick() == false)
+	{
+		closeClient(client);
+		return ;
+	}
+	else if (client.getNbmsg() == 2 && client.getUser() == false)
+	{
+		closeClient(client);
+		return ;
+	}
+
 }
 
 void Server::create_channel(std::string & name)
@@ -222,9 +248,9 @@ void Server::parsing_msg(std::string & buffer, int fd)
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{
-		if (findclient->second->getCreated() == false)
+		if (clients.find(fd) != clients.end() && findclient->second->getCreated() == false)
 			create_client(buffer, (*findclient->second));
-		else
+		else if (clients.find(fd) != clients.end() && clients.find(fd)->second->getCreated() == true)
 			std::cout << buffer;
 		if (clients.find(fd) != clients.end())
 			(*findclient->second).setNbmsgplusone();
