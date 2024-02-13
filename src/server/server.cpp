@@ -158,14 +158,35 @@ int Server::manage_server()
 	return (0);
 }
 
-void Server::create_client(std::string & buffer)
+void Server::create_client(std::string & buffer, Client & client)
 {
-	static int i;
-	if (i == 0 && !buffer.compare(0, 4, "PASS"))
+	if (client.getNbmsg() == 0 && client.getPass() == false && !buffer.compare(0, 4, "PASS"))
+	{
+		client.setPasstoTrue();
+		//client.setNbmsgplusone();
 		std::cout << "CA MARCHE\n";
-	else if ((i == 0 || i == 1) && !buffer.compare(0, 4, "NICK"))
+	}
+	else if (client.getNbmsg() <= 1 && client.getNick() == false && !buffer.compare(0, 4, "NICK"))
+	{
+		client.setNicktoTrue();
+		//client.setNbmsgplusone();
 		std::cout << "ca martche aussi\n";
-	i++;
+	}
+	else if (client.getNbmsg() <= 2 && client.getUser() == false && client.getNick() == true && !buffer.compare(0, 4, "USER"))
+	{
+		client.setUsertoTrue();
+		//client.setNbmsgplusone();
+		client.setCreatedtoTrue();
+		std::cout << "MONSTRE\n";
+	}
+	else if (client.getNbmsg() >= 3)
+	{
+		std::cerr << "Wrong message for client " << client.getFd() << std::endl;
+		close(client.getFd());
+		int fd = client.getFd();
+		delete (&client);
+		clients.erase(fd);
+	}
 }
 
 void Server::create_channel(std::string & name)
@@ -187,7 +208,8 @@ void Server::parsing_msg(std::string & buffer, int fd)
 	if (findclient != clients.end())
 	{
 		if (findclient->second->getCreated() == false)
-			create_client(buffer);
+			create_client(buffer, (*findclient->second));
+		(*findclient->second).setNbmsgplusone();
 	}
 	else
 		std::cout << "Client not found\n";
