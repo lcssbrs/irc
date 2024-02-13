@@ -1,6 +1,6 @@
 #include "../../includes/client/client.hpp"
 
-Client::Client(std::string &nick, std::string &user, int fd) : _nickname(nick), _username(user), _fd(fd){}
+Client::Client(std::string nick, std::string user, int fd) : _nickname(nick), _username(user), _fd(fd), isCreated(false){}
 
 Client::~Client(void) {}
 
@@ -17,4 +17,9 @@ const std::string	&Client::getUsername(void) const
 const int		&Client::getFd(void) const
 {
 	return (_fd);
+}
+
+const bool		&Client::getCreated(void) const
+{
+	return (isCreated);
 }

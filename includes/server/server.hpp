@@ -41,7 +41,7 @@ class Server
 		void create_client(std::string & name, std::string & nickname);
 		void create_channel(std::string & name);
 		void remove_client_from_channel(Client * kick);
-		void parsing_msg(std::string & buffer);
+		void parsing_msg(std::string & buffer, int fd);
 
 		class BindException: public std::exception
 		{
