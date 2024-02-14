@@ -1,4 +1,4 @@
-#include "../../includes/channel/channel.hpp"
+#include "../../includes/irc.hpp"
 
 void	Channel::printClients(void)
 {
@@ -7,16 +7,18 @@ void	Channel::printClients(void)
 			std::cout << it->second->getNickname() << std::endl;
 }
 
-Channel::Channel(std::string &name, Client *creator) : _name(name)
+Channel::Channel(std::string &name, std::string password,  Client *creator) : _name(name), _password (password)
 {
 	_operators[creator->getNickname()] = creator;
 	_regulars[creator->getNickname()] = creator;
 	_topic = "";
 	_inviteOnly = false;
 	_restrictTopic = false;
-	_passwordUse = false;
 	_limitUser = false;
-	_password = "";
+	if (password != "")
+		_passwordUse = true;
+	else
+		_passwordUse = false;
 	_nUser = 0;
 }
 
@@ -26,27 +28,27 @@ Client	*Channel::kick(Client *user, std::string &name)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
+		sendResponse(user->getFd(), "482", user->getNickname(), "");
 		return (NULL);
 	}
 	else if (name == "")
 	{
-		write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
+		sendResponse(user->getFd(), "461", user->getNickname(), "");
 		return (NULL);
 	}
 	else if (_operators.find(name) != _operators.end())
 	{
-		write(user->getFd(), "ERROR: You can't kick an operator", 30);
+		// write(user->getFd(), "ERROR: You can't kick an operator", 30); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
 		return (NULL);
 	}
 	else if (_regulars.find(name) == _regulars.end())
 	{
-		write(user->getFd(), "442 ERR_NOTONCHANNEL", 20);
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
 		return (NULL);
 	}
 	else if (_regulars[name] == user)
 	{
-		write(user->getFd(), "ERROR: You can't kick yourself", 30);
+		// write(user->getFd(), "ERROR: You can't kick yourself", 30); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
 		return (NULL);
 	}
 	Client *temp = _regulars[name];
@@ -58,28 +60,28 @@ Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *>
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
+		sendResponse(user->getFd(), "482", user->getNickname(), "");
 		return (NULL);
 	}
 	else if (name == "")
 	{
-		write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
+		sendResponse(user->getFd(), "461", user->getNickname(), "");
 		return (NULL);
 	}
 	else if (_regulars.find(name) != _regulars.end())
 	{
-		write(user->getFd(), "443 ERR_USERONCHANNEL", 21);
+		sendResponse(user->getFd(), "443", user->getNickname(), "");
 		return (NULL);
 	}
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->second->getNickname() == name)
 		{
-			write(user->getFd(), "341 RPL_INVITING", 16);
+			sendResponse(user->getFd(), "341", user->getNickname(), "");
 			return (it->second);
 		}
 	}
-	write(user->getFd(), "401 ERR_NOSUCHNICK", 18);
+	sendResponse(user->getFd(), "401", user->getNickname(), "");
 	return (NULL);
 }
 
@@ -87,10 +89,10 @@ void	Channel::topic(Client *user) const
 {
 	if (_topic == "")
 	{
-		write(user->getFd(), "331 RPL_NOTOPIC", 15);
+		sendResponse(user->getFd(), "331", user->getNickname(), "");
 		return ;
 	}
-	write(user->getFd(), _topic.c_str(), _topic.size());
+	send(user->getFd(), _topic.c_str(), _topic.size(), MSG_CONFIRM);
 }
 
 void	Channel::topic(Client *user, std::string &topic)
@@ -99,7 +101,7 @@ void	Channel::topic(Client *user, std::string &topic)
 	{
 		if (_operators.find(user->getNickname()) == _operators.end())
 		{
-			write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
+			sendResponse(user->getFd(), "482", user->getNickname(), "");
 			return ;
 		}
 	}
@@ -110,7 +112,7 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
-		write(user->getFd(), "482 ERR_CHANOPRIVSNEEDED", 24);
+		sendResponse(user->getFd(), "482", user->getNickname(), "");
 		return ;
 	}
 	if (option == "i")
@@ -122,7 +124,7 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		_passwordUse = !_passwordUse;
 		if (_passwordUse == true and arg == "")
 		{
-			write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
+			sendResponse(user->getFd(), "461", user->getNickname(), "");
 			_passwordUse = !_passwordUse;
 			return ;
 		}
@@ -136,7 +138,7 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 			_operators[arg] = _regulars.find(arg)->second;
 		else
 		{
-			write(user->getFd(), "442 ERR_NOTONCHANNEL", 20);
+			sendResponse(user->getFd(), "442", user->getNickname(), "");
 			return ;
 		}
 	}
@@ -147,20 +149,20 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		{
 			if (arg == "")
 			{
-				write(user->getFd(), "461 ERR_NEEDMOREPARAMS", 22);
+				sendResponse(user->getFd(), "461", user->getNickname(), "");
 				_limitUser = !_limitUser;
 				return ;
 			}
 			int i = atoi(arg.c_str());
 			if (i <= 0)
 			{
-				write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than 0)", 54);
+				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than 0)", 54); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
 				_limitUser = !_limitUser;
 				return ;
 			}
 			else if (i < static_cast<int>(_regulars.size()))
 			{
-				write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than the number of the channel's clients)", 88);
+				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than the number of the channel's clients)", 88); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
 				_limitUser = !_limitUser;
 				return ;
 			}
@@ -168,24 +170,24 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		}
 	}
 	else
-		write(user->getFd(), "472 ERR_UNKNOWNMODE", 19);
+		sendResponse(user->getFd(), "472", user->getNickname(), "");
 }
 
 void	Channel::userJoin(Client *user, std::string password)
 {
 	if (_limitUser == true and static_cast<int>(_regulars.size()) == _nUser)
 	{
-		write(user->getFd(), "471 ERR_CHANNELISFULL", 21);
+		sendResponse(user->getFd(), "471", user->getNickname(), "");
 		return ;
 	}
 	else if (_passwordUse == true and password != _password)
 	{
-		write(user->getFd(), "475 ERR_BADCHANNELKEY", 21);
+		sendResponse(user->getFd(), "475", user->getNickname(), "");
 		return ;
 	}
 	else if (_inviteOnly == true)
 	{
-		write(user->getFd(), "473 ERR_INVITEONLYCHAN", 22);
+		sendResponse(user->getFd(), "473", user->getNickname(), "");
 		return ;
 	}
 	if (user)

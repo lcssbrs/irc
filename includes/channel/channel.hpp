@@ -10,7 +10,7 @@ class Client;
 
 class Channel {
 	public:
-		Channel(std::string &name, Client *creator);
+		Channel(std::string &name, std::string password, Client *creator);
 		~Channel(void);
 
 		//operators command

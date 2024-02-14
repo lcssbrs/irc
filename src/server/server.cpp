@@ -223,7 +223,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 void Server::create_channel(std::string & name, Client * client)
 {
 	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
-	channels[name] = new Channel(name, client);
+	channels[name] = new Channel(name, "", client);
 }
 
 void Server::remove_client_from_channel(Client * kick)
