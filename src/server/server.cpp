@@ -173,17 +173,6 @@ void	Server::closeClient(Client & client, int i)
 	fds.erase(fds.begin() + i);
 }
 
-int checknickname(std::string buffer)
-{
-	if (buffer.find(" ") != std::string::npos || buffer.find(",") != std::string::npos || buffer.find("*") != std::string::npos || buffer.find("!") != std::string::npos || buffer.find("?") != std::string::npos || buffer.find("@") != std::string::npos || buffer.find(".") != std::string::npos)
-		return (1);
-	if (buffer.compare(0, 1, "$") == 0 || buffer.compare(0, 1, ":") == 0 || buffer.compare(0, 1, "#") == 0 || buffer.compare(0, 1, "&") == 0 || buffer.compare(0, 1, "$") == 0 || buffer.compare(0, 1, "~") == 0 || buffer.compare(0, 1, "+") == 0)
-		return (1);
-	if (buffer.compare("") == 0)
-		return (1);
-	return (0);
-}
-
 void Server::create_client(std::string & buffer, Client & client, int i)
 {
 	if (!buffer.compare(0, 6, "CAP LS"))
@@ -199,8 +188,11 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	}
 	else if (!buffer.compare(0, 4, "NICK") and client.getNickname() == "" and client.getPass() == true)
 	{
-		if (checknickname(buffer.substr(5, buffer.size() - 6)) == 1)
+		if (checkNickname(buffer.substr(5, buffer.size() - 6), client.getFd()))
+		{
 			closeClient(client, i);
+			return ;
+		}
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
 	}
@@ -225,20 +217,21 @@ void Server::remove_client_from_channel(Client * kick)
 	(void)kick;
 }
 
-void	Server::sendmessagetoclient(Client * client, std::string buffer)
+void	Server::sendmessagetoclient(Client *client, std::string buffer)
 {
+	std::cout << "buffer: " << buffer;
 	size_t lenName = buffer.find(" ");
 	std::string nameClient = buffer.substr(0, lenName);
-	std::string rest = buffer.substr(lenName + 1, buffer.size() - 1);
-	std::cout << nameClient << std::endl;
-	std::cout << rest << std::endl;
+	std::string rest = buffer.substr(lenName + 2, buffer.size() - 1);
+	std::cout << "name client: " << nameClient;
+	std::cout << "rest: " << rest;
 	std::map<int, Client *>::iterator it = clients.begin();
 	while (it != clients.end())
 	{
 		if (it->second->getNickname().compare(nameClient) == 0)
 		{
 			write(it->second->getFd(), client->getNickname().c_str(), client->getNickname().size());
-			write(it->second->getFd(), " ", 1);
+			write(it->second->getFd(), ": ", 1);
 			write(it->second->getFd(), rest.c_str(), rest.size());
 		}
 		it++;
@@ -261,9 +254,9 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				std::string name = buffer.substr(1, buffer.size() - 2);
 				create_channel(name, findclient->second);
 			}
-			else if (buffer.compare(0, 4, "/msg") == 0)
+			else if (buffer.compare(0, 7, "PRIVMSG") == 0)
 			{
-				sendmessagetoclient(findclient->second, buffer.substr(5, buffer.size() - 6));
+				sendmessagetoclient(findclient->second, buffer.substr(8));
 			}
 		}
 	}
@@ -271,3 +264,24 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 		std::cout << "Client not found\n";
 }
 
+int	Server::checkNickname(const std::string &nick, int fd)
+{
+	if (nick.find(" ") != std::string::npos || nick.find(",") != std::string::npos || nick.find("*") != std::string::npos || nick.find("!") != std::string::npos || nick.find("?") != std::string::npos || nick.find("@") != std::string::npos || nick.find(".") != std::string::npos)
+		return (1);
+	else if (nick.compare(0, 1, "$") == 0 || nick.compare(0, 1, ":") == 0 || nick.compare(0, 1, "#") == 0 || nick.compare(0, 1, "&") == 0 || nick.compare(0, 1, "$") == 0 || nick.compare(0, 1, "~") == 0 || nick.compare(0, 1, "+") == 0)
+		return (1);
+	else if (nick == "")
+	{
+		write(fd, "431 ERR_NONICKNAMEGIVEN", 23);
+		return (1);
+	}
+	for (std::vector<struct pollfd>::iterator it = fds.begin() + 1; it != fds.end(); it++)
+	{
+		if (fd != it->fd and clients[it->fd]->getNickname() == nick)
+		{
+			write(fd, "433 ERR_NICKNAMEINUSE", 21);
+			return (1);
+		}
+	}
+	return (0);
+}
