@@ -187,6 +187,11 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	}
 	else if (!buffer.compare(0, 4, "NICK") and client.getNickname() == "" and client.getPass() == true)
 	{
+		if (checkNickname(buffer.substr(5, buffer.size() - 6), client.getFd()))
+		{
+			closeClient(client, i);
+			return ;
+		}
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
 	}
@@ -227,3 +232,20 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 		std::cout << "Client not found\n";
 }
 
+int	Server::checkNickname(const std::string &nick, int fd)
+{
+	if (nick == "")
+	{
+		write(fd, "431 ERR_NONICKNAMEGIVEN", 23);
+		return (1);
+	}
+	for (std::vector<struct pollfd>::iterator it = fds.begin() + 1; it != fds.end(); it++)
+	{
+		if (fd != it->fd and clients[it->fd]->getNickname() == nick)
+		{
+			write(fd, "433 ERR_NICKNAMEINUSE", 21);
+			return (1);
+		}
+	}
+	return (0);
+}
