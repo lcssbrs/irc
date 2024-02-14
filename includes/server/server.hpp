@@ -3,6 +3,7 @@
 #include <iostream>
 #include <poll.h>
 #include <map>
+#include <unistd.h>
 #include <vector>
 #include <fcntl.h>
 #include "../client/client.hpp"
@@ -45,6 +46,7 @@ class Server
 		void	parsing_msg(std::string & buffer, int fd, int i);
 		void	closeClient(Client &client, int i);
 		int		checkNickname(const std::string &nick, int fd);
+		void	sendmessagetoclient(Client * client, std::string buffer);
 
 		class BindException: public std::exception
 		{

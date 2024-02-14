@@ -209,11 +209,32 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 void Server::create_channel(std::string & name, Client * client)
 {
 	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
+	channels[name] = new Channel(name, client);
 }
 
 void Server::remove_client_from_channel(Client * kick)
 {
 	(void)kick;
+}
+
+void	Server::sendmessagetoclient(Client *client, std::string buffer)
+{
+	size_t lenName = buffer.find(" ");
+	std::string nameClient = buffer.substr(0, lenName);
+	std::string rest = buffer.substr(lenName + 1, buffer.size() - 1);
+	std::cout << nameClient << std::endl;
+	std::cout << rest << std::endl;
+	std::map<int, Client *>::iterator it;
+	while (it != clients.end())
+	{
+		if (it->second->getNickname().compare(nameClient) == 0)
+		{
+			write(it->second->getFd(), client->getNickname().c_str(), client->getNickname().size());
+			write(it->second->getFd(), " ", 1);
+			write(it->second->getFd(), rest.c_str(), rest.size());
+		}
+		it++;
+	}
 }
 
 void Server::parsing_msg(std::string & buffer, int fd, int i)
@@ -227,12 +248,14 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
-			std::cout << "marche wlh\n";
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
-				std::cout << name << std::endl;
 				create_channel(name, findclient->second);
+			}
+			else if (buffer.compare(0, 4, "/msg") == 0)
+			{
+				sendmessagetoclient(findclient->second, buffer.substr(5, buffer.size() - 6));
 			}
 		}
 	}
@@ -242,7 +265,11 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 
 int	Server::checkNickname(const std::string &nick, int fd)
 {
-	if (nick == "")
+	if (nick.find(" ") != std::string::npos || nick.find(",") != std::string::npos || nick.find("*") != std::string::npos || nick.find("!") != std::string::npos || nick.find("?") != std::string::npos || nick.find("@") != std::string::npos || nick.find(".") != std::string::npos)
+		return (1);
+	else if (nick.compare(0, 1, "$") == 0 || nick.compare(0, 1, ":") == 0 || nick.compare(0, 1, "#") == 0 || nick.compare(0, 1, "&") == 0 || nick.compare(0, 1, "$") == 0 || nick.compare(0, 1, "~") == 0 || nick.compare(0, 1, "+") == 0)
+		return (1);
+	else if (nick == "")
 	{
 		write(fd, "431 ERR_NONICKNAMEGIVEN", 23);
 		return (1);
