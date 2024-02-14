@@ -237,9 +237,9 @@ void	Server::sendmessagetoclient(Client * client, std::string buffer)
 	{
 		if (it->second->getNickname().compare(nameClient) == 0)
 		{
-			write(it->second->getFd(), client->getNickname(), client->getNickname().size());
+			write(it->second->getFd(), client->getNickname().c_str(), client->getNickname().size());
 			write(it->second->getFd(), " ", 1);
-			write(it->second->getFd(), rest, rest.size());
+			write(it->second->getFd(), rest.c_str(), rest.size());
 		}
 		it++;
 	}
