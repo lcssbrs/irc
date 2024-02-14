@@ -173,6 +173,17 @@ void	Server::closeClient(Client & client, int i)
 	fds.erase(fds.begin() + i);
 }
 
+int checknickname(std::string buffer)
+{
+	if (buffer.find(" ") != std::string::npos || buffer.find(",") != std::string::npos || buffer.find("*") != std::string::npos || buffer.find("!") != std::string::npos || buffer.find("?") != std::string::npos || buffer.find("@") != std::string::npos || buffer.find(".") != std::string::npos)
+		return (1);
+	if (buffer.compare(0, 1, "$") == 0 || buffer.compare(0, 1, ":") == 0 || buffer.compare(0, 1, "#") == 0 || buffer.compare(0, 1, "&") == 0 || buffer.compare(0, 1, "$") == 0 || buffer.compare(0, 1, "~") == 0 || buffer.compare(0, 1, "+") == 0)
+		return (1);
+	if (buffer.compare("") == 0)
+		return (1);
+	return (0);
+}
+
 void Server::create_client(std::string & buffer, Client & client, int i)
 {
 	if (!buffer.compare(0, 6, "CAP LS"))
@@ -188,6 +199,8 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	}
 	else if (!buffer.compare(0, 4, "NICK") and client.getNickname() == "" and client.getPass() == true)
 	{
+		if (checknickname(buffer.substr(5, buffer.size() - 6)) == 1)
+			closeClient(client, i);
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
 	}
@@ -204,11 +217,32 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 void Server::create_channel(std::string & name, Client * client)
 {
 	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
+	channels[name] = new Channel(name, client);
 }
 
 void Server::remove_client_from_channel(Client * kick)
 {
 	(void)kick;
+}
+
+void	Server::sendmessagetoclient(Client * client, std::string buffer)
+{
+	size_t lenName = buffer.find(" ");
+	std::string nameClient = buffer.substr(0, lenName);
+	std::string rest = buffer.substr(lenName + 1, buffer.size() - 1);
+	std::cout << nameClient << std::endl;
+	std::cout << rest << std::endl;
+	std::map<int, Client *>::iterator it;
+	while (it != clients.end())
+	{
+		if (it->second->getNickname().compare(nameClient) == 0)
+		{
+			write(it->second->getFd(), client->getNickname(), client->getNickname().size());
+			write(it->second->getFd(), " ", 1);
+			write(it->second->getFd(), rest, rest.size());
+		}
+		it++;
+	}
 }
 
 void Server::parsing_msg(std::string & buffer, int fd, int i)
@@ -222,12 +256,14 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
-			std::cout << "marche wlh\n";
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
-				std::cout << name << std::endl;
 				create_channel(name, findclient->second);
+			}
+			else if (buffer.compare(0, 4, "/msg") == 0)
+			{
+				sendmessagetoclient(findclient->second, buffer.substr(5, buffer.size() - 6));
 			}
 		}
 	}

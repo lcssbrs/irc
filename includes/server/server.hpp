@@ -3,6 +3,7 @@
 #include <iostream>
 #include <poll.h>
 #include <map>
+#include <unistd.h>
 #include <vector>
 #include <fcntl.h>
 #include "../client/client.hpp"
@@ -44,6 +45,7 @@ class Server
 		void remove_client_from_channel(Client * kick);
 		void parsing_msg(std::string & buffer, int fd, int i);
 		void closeClient(Client & client, int i);
+		void sendmessagetoclient(Client * client, std::string buffer);
 
 		class BindException: public std::exception
 		{
