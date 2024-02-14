@@ -232,7 +232,7 @@ void	Server::sendmessagetoclient(Client * client, std::string buffer)
 	std::string rest = buffer.substr(lenName + 1, buffer.size() - 1);
 	std::cout << nameClient << std::endl;
 	std::cout << rest << std::endl;
-	std::map<int, Client *>::iterator it;
+	std::map<int, Client *>::iterator it = clients.begin();
 	while (it != clients.end())
 	{
 		if (it->second->getNickname().compare(nameClient) == 0)
