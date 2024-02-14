@@ -1,5 +1,11 @@
 #include "../../includes/server/server.hpp"
 
+void	sendResponse(int fd, std::string code, std::string &name, std::string error)
+{
+	std::string msg = ":127.0.0.1 " + code + " " + name + " :" + error + "\n";
+	send(fd, msg.c_str(), msg.size(), MSG_CONFIRM);
+}
+
 Server::Server(int port, std::string pass)
 {
 	this->port = port;
@@ -189,10 +195,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	else if (!buffer.compare(0, 4, "NICK") and client.getNickname() == "" and client.getPass() == true)
 	{
 		if (checkNickname(buffer.substr(5, buffer.size() - 6), client.getFd()))
-		{
-			closeClient(client, i);
 			return ;
-		}
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
 		std::cout << client.getNickname() << std::endl;
 	}
@@ -200,7 +203,8 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	{
 		client.setUsername(buffer.substr(5, buffer.size() - 6));
 		client.setCreatedtoTrue();
-		std::cout << client.getUsername() << std::endl;
+		std::string msg = ":127.0.0.1 001 " + client.getNickname() + " :" + "Welcome to the best IRC server of 42 " + client.getNickname() + "!\n";
+		send(client.getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
 	else
 		closeClient(client, i);
@@ -236,6 +240,7 @@ void	Server::sendmessagetoclient(Client *client, std::string buffer)
 		}
 		it++;
 	}
+	//401 ERR_NOSUCHNICK
 }
 
 void Server::parsing_msg(std::string & buffer, int fd, int i)
@@ -264,22 +269,28 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 		std::cout << "Client not found\n";
 }
 
-int	Server::checkNickname(const std::string &nick, int fd)
+int	Server::checkNickname(std::string nick, int fd)
 {
 	if (nick.find(" ") != std::string::npos || nick.find(",") != std::string::npos || nick.find("*") != std::string::npos || nick.find("!") != std::string::npos || nick.find("?") != std::string::npos || nick.find("@") != std::string::npos || nick.find(".") != std::string::npos)
+	{
+		sendResponse(fd, "433", nick, "Erroneous Nickname");
 		return (1);
+	}
 	else if (nick.compare(0, 1, "$") == 0 || nick.compare(0, 1, ":") == 0 || nick.compare(0, 1, "#") == 0 || nick.compare(0, 1, "&") == 0 || nick.compare(0, 1, "$") == 0 || nick.compare(0, 1, "~") == 0 || nick.compare(0, 1, "+") == 0)
+	{
+		sendResponse(fd, "433", nick, "Erroneous Nickname");
 		return (1);
+	}
 	else if (nick == "")
 	{
-		write(fd, "431 ERR_NONICKNAMEGIVEN", 23);
+		sendResponse(fd, "433", nick, "Erroneous Nickname");
 		return (1);
 	}
 	for (std::vector<struct pollfd>::iterator it = fds.begin() + 1; it != fds.end(); it++)
 	{
 		if (fd != it->fd and clients[it->fd]->getNickname() == nick)
 		{
-			write(fd, "433 ERR_NICKNAMEINUSE", 21);
+			sendResponse(fd, "433", nick, "Erroneous Nickname");
 			return (1);
 		}
 	}
