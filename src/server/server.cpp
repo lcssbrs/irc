@@ -125,10 +125,9 @@ void Server::manage_loop()
 						{
                             // Traitement des données reçues
                             line[fds[i].fd] += buffer;
-							if (buffer.compare(0, 6, "CAP LS") != 0 and clients[fds[i].fd]->getCreated() == false)
-								parsing_msg(buffer, fds[i].fd, i);
+							parsing_msg(buffer, fds[i].fd, i);
                         }
-						else if (bytes_received == 0 && !fds.[i].fd)
+						else if (bytes_received == 0)
 						{
                             // Déconnexion du client
                             std::cout << "Client disconnected" << std::endl;
@@ -176,6 +175,8 @@ void	Server::closeClient(Client & client, int i)
 
 void Server::create_client(std::string & buffer, Client & client, int i)
 {
+	if (!buffer.compare(0, 6, "CAP LS"))
+		return ;
 	if (!buffer.compare(0, 6, "PASS :") and client.getPass() == false)
 	{
 		if (buffer.substr(6, buffer.size() - 7) != password)
@@ -203,7 +204,6 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 void Server::create_channel(std::string & name, Client * client)
 {
 	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
-
 }
 
 void Server::remove_client_from_channel(Client * kick)
@@ -213,7 +213,6 @@ void Server::remove_client_from_channel(Client * kick)
 
 void Server::parsing_msg(std::string & buffer, int fd, int i)
 {
-	(void)buffer;
 	std::map<int, Client *>::iterator findclient;
 
 	findclient = clients.find(fd);
@@ -221,8 +220,16 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 	{
 		if (clients.find(fd) != clients.end() && findclient->second->getCreated() == false)
 			create_client(buffer, (*findclient->second), i);
-		else if (clients.find(fd) != clients.end() && clients.find(fd)->second->getCreated() == true)
-			std::cout << buffer;
+		else
+		{
+			std::cout << "marche wlh\n";
+			if (buffer.compare(0, 1, "!") == 0)
+			{
+				std::string name = buffer.substr(1, buffer.size() - 2);
+				std::cout << name << std::endl;
+				create_channel(name, findclient->second);
+			}
+		}
 	}
 	else
 		std::cout << "Client not found\n";
