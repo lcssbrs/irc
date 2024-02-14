@@ -219,18 +219,19 @@ void Server::remove_client_from_channel(Client * kick)
 
 void	Server::sendmessagetoclient(Client *client, std::string buffer)
 {
+	std::cout << "buffer: " << buffer;
 	size_t lenName = buffer.find(" ");
 	std::string nameClient = buffer.substr(0, lenName);
-	std::string rest = buffer.substr(lenName + 1, buffer.size() - 1);
-	std::cout << nameClient << std::endl;
-	std::cout << rest << std::endl;
-	std::map<int, Client *>::iterator it;
+	std::string rest = buffer.substr(lenName + 2, buffer.size() - 1);
+	std::cout << "name client: " << nameClient;
+	std::cout << "rest: " << rest;
+	std::map<int, Client *>::iterator it = clients.begin();
 	while (it != clients.end())
 	{
 		if (it->second->getNickname().compare(nameClient) == 0)
 		{
 			write(it->second->getFd(), client->getNickname().c_str(), client->getNickname().size());
-			write(it->second->getFd(), " ", 1);
+			write(it->second->getFd(), ": ", 1);
 			write(it->second->getFd(), rest.c_str(), rest.size());
 		}
 		it++;
@@ -253,9 +254,9 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				std::string name = buffer.substr(1, buffer.size() - 2);
 				create_channel(name, findclient->second);
 			}
-			else if (buffer.compare(0, 4, "/msg") == 0)
+			else if (buffer.compare(0, 7, "PRIVMSG") == 0)
 			{
-				sendmessagetoclient(findclient->second, buffer.substr(5, buffer.size() - 6));
+				sendmessagetoclient(findclient->second, buffer.substr(8));
 			}
 		}
 	}
