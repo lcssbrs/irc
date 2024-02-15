@@ -7,7 +7,7 @@ void	Channel::printClients(void)
 			std::cout << it->second->getNickname() << std::endl;
 }
 
-Channel::Channel(std::string &name, std::string password,  Client *creator) : _name(name), _password (password)
+Channel::Channel(std::string &name, std::string password, Client *creator) : _name(name), _password (password)
 {
 	_operators[creator->getNickname()] = creator;
 	_regulars[creator->getNickname()] = creator;
@@ -20,6 +20,8 @@ Channel::Channel(std::string &name, std::string password,  Client *creator) : _n
 	else
 		_passwordUse = false;
 	_nUser = 0;
+	std::string msg = ":" + creator->getNickname() + "!~" + creator->getNickname()[0] + "@0::1 JOIN #" + name;
+	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
 
 Channel::~Channel(void) {}
