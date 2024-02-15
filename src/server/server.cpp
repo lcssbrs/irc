@@ -272,8 +272,6 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
-			for (size_t i = 1; i < fds.size(); ++i)
-				send_ping(fds[i].fd);
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
@@ -283,7 +281,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				sendmessagetoclient(findclient->second, buffer);
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
-			else if (buffer.compare(0, 6, "MODE #") == 0)
+			else if (buffer.compare(0, 5, "mode ") == 0)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else if (buffer.compare(0, 4, "PONG") == 0)
 			{
@@ -303,15 +301,16 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 
 void	Server::mode_channel(std::string channel, Client * client)
 {
-	(void)channel;
 	(void)client;
-	if (channels.find(channel) == channels.end())
+	size_t lenName = channel.find(" ");
+	std::string name = channel.substr(0, lenName);
+	if (channels.find(name) == channels.end())
 	{
 		// sendResponse(client->getFd(), "code", "name", "error"); // desole hugo
 		return ;
 	}
-	else
-		std::cout << "test\n";
+	//else
+		//std::cout << "test\n";
 }
 
 int	Server::checkNickname(std::string nick, int fd)
@@ -344,9 +343,12 @@ int	Server::checkNickname(std::string nick, int fd)
 
 void	Server::send_ping(int fd)
 {
-	write(fd, "PING 10\n", 8);
+	write (fd, "PING 10\n", 8);
 	std::string buffer;
-	int bytes_received = get_line(fd, buffer);
-	if (bytes_received < 0)
-		sendResponse(fd, "sorry", "hugo", "miskine") ;
+
+	int bits = get_line(fd, buffer);
+	if (bits < 0)
+		return ;
+	if (buffer.compare(0, 8, "PONG :10") == 0)
+		return ;
 }
