@@ -280,6 +280,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				sendmessagetoclient(findclient->second, buffer);
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
+			else if (buffer.compare(0, 5, "KICK ") == 0)
+				std::cout << "try\n";
 			else
 				std::cout << buffer;
 		}
