@@ -123,7 +123,7 @@ void Server::manage_loop()
                         }
                     }
 					else
-					{
+					{	
                         // Données disponibles sur un client existant
                         std::string buffer;
                         int bytes_received = get_line(fds[i].fd, buffer);
@@ -272,6 +272,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
+			for (size_t i = 1; i < fds.size(); ++i)
+				send_ping(fds[i].fd);
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
@@ -281,12 +283,33 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				sendmessagetoclient(findclient->second, buffer);
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
+			else if (buffer.compare(0, 6, "MODE #") == 0)
+				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
+			else if (buffer.compare(0, 4, "PONG") == 0)
+			{
+			}
+			else if (buffer.compare(0, 4, "PING") == 0)
+			{
+				std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
+				write(findclient->second->getFd(), result.c_str(), result.size());
+			}
 			else
 				std::cout << buffer;
 		}
 	}
 	else
 		std::cout << "Client not found\n";
+}
+
+void	Server::mode_channel(std::string channel, Client * client)
+{
+	if (channels.find(channel) == channels.end())
+	{
+		sendResponse(client->getFd(), "code", "name", "error"); // desole hugo
+		return ;
+	}
+	else
+		std::cout << "test\n";
 }
 
 int	Server::checkNickname(std::string nick, int fd)
@@ -315,4 +338,13 @@ int	Server::checkNickname(std::string nick, int fd)
 		}
 	}
 	return (0);
+}
+
+void	Server::send_ping(int fd)
+{
+	write(fd, "PING 10\n", 8);
+	std::string buffer;
+	int bytes_received = get_line(fd, buffer);
+	if (bytes_received < 0)
+		sendResponse(fd, "sorry", "hugo", "miskine") ;
 }
