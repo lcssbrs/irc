@@ -21,12 +21,13 @@ class Channel {
 		void	mode(Client *user, bool change, std::string &option, std::string &arg);
 
 		void	userJoin(Client *user, std::string password);
-		int		userLeave(Client *user);
-		void	printClients(void);
-		void	printStatus(void);
-		void	sentNewcomer(Client *user);
+		int		userLeave(Client *user, std::string msg);
+		void	sendNewcomer(Client *user);
+		void	sendMessage(Client *user, std::string msg);
+		void	sendLeave(Client *user, std::string &msg);
 
-
+		//getters
+		const std::string	&getName(void) const;
 
 	private:
 		std::map<std::string, Client *>	_operators;
