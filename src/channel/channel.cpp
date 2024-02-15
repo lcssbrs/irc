@@ -7,7 +7,7 @@ void	Channel::printClients(void)
 			std::cout << it->second->getNickname() << std::endl;
 }
 
-Channel::Channel(std::string &name, std::string password,  Client *creator) : _name(name), _password (password)
+Channel::Channel(std::string &name, std::string password, Client *creator) : _name(name), _password (password)
 {
 	_operators[creator->getNickname()] = creator;
 	_regulars[creator->getNickname()] = creator;
@@ -20,6 +20,13 @@ Channel::Channel(std::string &name, std::string password,  Client *creator) : _n
 	else
 		_passwordUse = false;
 	_nUser = 0;
+	std::string msg = ":" + creator->getNickname() + "!~" + creator->getNickname()[0] + "@127.0.0.1 JOIN #" + name + "\n";
+	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":127.0.0.1 MODE #" + name + "nt\n";
+	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":127.0.0.1 353 " + creator->getNickname() + "= #" + name + " :@" + creator->getNickname() + "\n";
+	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":127.0.0.1 366 " + creator->getNickname() + " #" + name + " :End of /NAMES list.\n";
 }
 
 Channel::~Channel(void) {}
@@ -191,7 +198,16 @@ void	Channel::userJoin(Client *user, std::string password)
 		return ;
 	}
 	if (user)
+	{
 		_regulars[user->getNickname()] = user;
+		std::string msg = ":" + user->getNickname() + "!~" + user->getNickname()[0] + "@127.0.0.1 JOIN #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+		msg = user->getNickname() + " #" + _name + " :" + _topic + "\n";
+// S <-   :irc.example.com 333 alice #test dan!~d@localhost 1547691506
+// S <-   :irc.example.com 353 alice @ #test :alice @dan*
+		msg = ":127.0.0.1 366 " + user->getNickname() + " #" + _name + " :End of /NAMES list.\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 }
 
 int		Channel::userLeave(Client *user)
