@@ -13,20 +13,24 @@ Channel::Channel(std::string &name, std::string password, Client *creator) : _na
 	_regulars[creator->getNickname()] = creator;
 	_topic = "";
 	_inviteOnly = false;
-	_restrictTopic = false;
+	_restrictTopic = true;
 	_limitUser = false;
 	if (password != "")
 		_passwordUse = true;
 	else
 		_passwordUse = false;
 	_nUser = 0;
-	std::string msg = ":" + creator->getNickname() + "!~" + creator->getNickname()[0] + "@127.0.0.1 JOIN #" + name + "\n";
+	std::string msg = ":" + creator->getNickname() + "!" + creator->getUsername() + "@127.0.0.1 JOIN #" + name + "\n";
 	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
-	msg = ":127.0.0.1 MODE #" + name + "nt\n";
+
+	msg = ":127.0.0.1 MODE #" + name + " +nt\n";
 	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
-	msg = ":127.0.0.1 353 " + creator->getNickname() + "= #" + name + " :@" + creator->getNickname() + "\n";
+
+	msg = msg = ":127.0.0.1 353 " + creator->getNickname() + " = #" + _name + " :@" + creator->getNickname() + "\n";
 	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+
 	msg = ":127.0.0.1 366 " + creator->getNickname() + " #" + name + " :End of /NAMES list.\n";
+	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
 
 Channel::~Channel(void) {}
@@ -199,14 +203,32 @@ void	Channel::userJoin(Client *user, std::string password)
 	}
 	if (user)
 	{
-		_regulars[user->getNickname()] = user;
-		std::string msg = ":" + user->getNickname() + "!~" + user->getNickname()[0] + "@127.0.0.1 JOIN #" + _name + "\n";
+		sentNewcomer(user);
+		std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN #" + _name + "\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
-		msg = user->getNickname() + " #" + _name + " :" + _topic + "\n";
-// S <-   :irc.example.com 333 alice #test dan!~d@localhost 1547691506
-// S <-   :irc.example.com 353 alice @ #test :alice @dan*
+
+		if (_topic != "")
+			sendResponse(user->getFd(), "332", user->getNickname(), "");// msg = ":127.0.0.1 332 " + user->getNickname() + " #" + _name + " :" + _topic + "\n";
+		else
+			sendResponse(user->getFd(), "333", user->getNickname(), "");// msg = ":127.0.0.1 331 " + user->getNickname() + " #" + _name + " :No topic set\n";
+		// send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+
+		msg = ":127.0.0.1 333 " + user->getNickname() + " #" + _name + " " + _operators.begin()->second->getNickname() + "!~" + _operators.begin()->second->getNickname()[0] + "@127.0.0.1 1547691506\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+
+		msg = ":127.0.0.1 353 " + user->getNickname() + " = #" + _name + " :";
+		for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
+		{
+			if (_operators.find(it->second->getNickname()) != _operators.end())
+				msg += "@";
+			msg += it->second->getNickname() + " ";
+		}
+		msg += user->getNickname() + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+
 		msg = ":127.0.0.1 366 " + user->getNickname() + " #" + _name + " :End of /NAMES list.\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+		_regulars[user->getNickname()] = user;
 	}
 }
 
@@ -239,4 +261,11 @@ void	Channel::printStatus(void)
 	std::cout << "Operators: " << std::endl;
 	for (std::map<std::string, Client *>::iterator it = _operators.begin(); it != _operators.end(); it++)
 		std::cout << it->second->getNickname() << std::endl;
+}
+
+void	Channel::sentNewcomer(Client *user)
+{
+	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN :#" + _name + "\n";
+	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
+		send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
