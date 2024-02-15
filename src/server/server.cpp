@@ -187,6 +187,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	{
 		if (buffer.substr(6, buffer.size() - 7) != password)
 		{
+			std::cout << buffer << std::endl;
 			sendResponse(client.getFd(), "464", client.getNickname(), "Password Incorrect");
 			send(client.getFd(), "ERROR :Closing Link: localhost (Bad Password)\n", 46, MSG_CONFIRM);
 			closeClient(client, i);

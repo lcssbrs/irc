@@ -24,6 +24,8 @@ class Channel {
 		int		userLeave(Client *user);
 		void	printClients(void);
 		void	printStatus(void);
+		void	sentNewcomer(Client *user);
+
 
 
 	private:
