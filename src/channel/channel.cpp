@@ -119,7 +119,7 @@ void	Channel::topic(Client *user, std::string &topic)
 	_topic = topic;
 }
 
-void	Channel::mode(Client *user, std::string &option, std::string &arg)
+void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
@@ -127,16 +127,16 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		return ;
 	}
 	if (option == "i")
-		_inviteOnly = !_inviteOnly;
+		_inviteOnly = change;
 	else if (option == "t")
-		_restrictTopic = !_restrictTopic;
+		_restrictTopic = change;
 	else if (option == "k")
 	{
-		_passwordUse = !_passwordUse;
+		_passwordUse = change;
 		if (_passwordUse == true and arg == "")
 		{
 			sendResponse(user->getFd(), "461", user->getNickname(), "");
-			_passwordUse = !_passwordUse;
+			_passwordUse = false;
 			return ;
 		}
 		_password = arg;
@@ -155,26 +155,26 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 	}
 	else if (option == "l")
 	{
-		_limitUser = !_limitUser;
+		_limitUser = change;
 		if (_limitUser == true)
 		{
 			if (arg == "")
 			{
 				sendResponse(user->getFd(), "461", user->getNickname(), "");
-				_limitUser = !_limitUser;
+				_limitUser = false;
 				return ;
 			}
 			int i = atoi(arg.c_str());
 			if (i <= 0)
 			{
 				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than 0)", 54); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
-				_limitUser = !_limitUser;
+				_limitUser = false;
 				return ;
 			}
 			else if (i < static_cast<int>(_regulars.size()))
 			{
 				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than the number of the channel's clients)", 88); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
-				_limitUser = !_limitUser;
+				_limitUser = false;
 				return ;
 			}
 			_nUser = i;
@@ -208,10 +208,10 @@ void	Channel::userJoin(Client *user, std::string password)
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
 		if (_topic != "")
-			sendResponse(user->getFd(), "332", user->getNickname(), "");// msg = ":127.0.0.1 332 " + user->getNickname() + " #" + _name + " :" + _topic + "\n";
+			msg = ":127.0.0.1 332 " + user->getNickname() + " #" + _name + " :" + _topic + "\n";
 		else
-			sendResponse(user->getFd(), "333", user->getNickname(), "");// msg = ":127.0.0.1 331 " + user->getNickname() + " #" + _name + " :No topic set\n";
-		// send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			msg = ":127.0.0.1 331 " + user->getNickname() + " #" + _name + " :No topic set\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
 		msg = ":127.0.0.1 333 " + user->getNickname() + " #" + _name + " " + _operators.begin()->second->getNickname() + "!~" + _operators.begin()->second->getNickname()[0] + "@127.0.0.1 1547691506\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
@@ -265,7 +265,7 @@ void	Channel::printStatus(void)
 
 void	Channel::sentNewcomer(Client *user)
 {
-	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN :#" + _name + "\n";
+	std::string msg = ":" + user->getNickname() + "!" + user->getUsername()[0] + "@127.0.0.1 JOIN :#" + _name + "\n";
 	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
 		send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
