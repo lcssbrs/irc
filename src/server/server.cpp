@@ -220,10 +220,22 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	}
 }
 
-void Server::create_channel(std::string & name, Client * client)
+void Server::create_channel(std::string name, Client * client)
 {
-	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
-	channels[name] = new Channel(name, "", client);
+	size_t lenName = name.find(" ");
+	std::string newName = name.substr(0, lenName);
+	std::string password = name.substr(lenName + 1, name.size() - (lenName));
+	if (channels.find(newName) == channels.end())
+	{
+		std::cout << "channel " << newName << " created by " << client->getNickname() << "\n" ;
+		channels[name] = new Channel(name, password, client);
+		//channels.find(name)->second->userJoin(client, password);
+		//message a send
+	}
+	else if (channels.find(name) != channels.end())
+	{
+		channels.find(name)->second->userJoin(client, password);
+	}
 }
 
 void Server::remove_client_from_channel(Client * kick)
@@ -266,6 +278,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			}
 			else if (buffer.compare(0, 7, "PRIVMSG") == 0)
 				sendmessagetoclient(findclient->second, buffer);
+			else if (buffer.compare(0, 6, "JOIN #") == 0)
+				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else
 				std::cout << buffer;
 		}
