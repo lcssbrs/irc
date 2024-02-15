@@ -285,14 +285,11 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				mode_channel(buffer.substr(5, buffer.size() - 6), findclient->second);
 			else if (buffer.compare(0, 6, "MODE #") == 0)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
-			else if (buffer.compare(0, 4, "PONG") == 0)
-			{
-			}
-			else if (buffer.compare(0, 4, "PING") == 0)
-			{
-				std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
-				write(findclient->second->getFd(), result.c_str(), result.size());
-			}
+			//else if (buffer.compare(0, 4, "PING") == 0)
+			//{
+			//	std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
+			//	write(findclient->second->getFd(), result.c_str(), result.size());
+			//}
 			else
 				std::cout << buffer;
 		}
@@ -319,7 +316,6 @@ void	Server::mode_channel(std::string channel, Client * client)
 		boole = false;
 	if (mode.compare(0, 1, "+") == 0 or mode.compare(0, 1, "-") == 0)
 		mode = mode.substr(1, lenMode - 1);
-	std::cout << arg << std::endl;
 	if (channels.find(name) != channels.end())
 		channels.find(name)->second->mode(client, boole, mode, arg);
 }
