@@ -299,12 +299,43 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				sendmessagetoclient(findclient->second, buffer);
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
+			else if (buffer.compare(0, 5, "mode ") == 0)
+				mode_channel(buffer.substr(5, buffer.size() - 6), findclient->second);
+			else if (buffer.compare(0, 6, "MODE #") == 0)
+				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
+			//else if (buffer.compare(0, 4, "PING") == 0)
+			//{
+			//	std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
+			//	write(findclient->second->getFd(), result.c_str(), result.size());
+			//}
 			else
 				std::cout << buffer;
 		}
 	}
 	else
 		std::cout << "Client not found\n";
+}
+
+void	Server::mode_channel(std::string channel, Client * client)
+{
+	(void)client;
+	size_t lenName = channel.find(" ");
+	std::string name = channel.substr(0, lenName);
+	std::string mode = channel.substr(lenName + 1, channel.size() - (lenName));
+	bool boole = true;
+	size_t lenMode = mode.find(" ");
+	mode = mode.substr(0, mode.size() - lenMode);
+	std::string arg = channel;
+	for(int i = 0; i < 2 ;i++)
+		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
+	if (arg == mode)
+		arg = "";
+	if (mode.compare(0, 1, "-") == 0)
+		boole = false;
+	if (mode.compare(0, 1, "+") == 0 or mode.compare(0, 1, "-") == 0)
+		mode = mode.substr(1, lenMode - 1);
+	if (channels.find(name) != channels.end())
+		channels.find(name)->second->mode(client, boole, mode, arg);
 }
 
 int	Server::checkNickname(std::string nick, int fd)
@@ -333,4 +364,16 @@ int	Server::checkNickname(std::string nick, int fd)
 		}
 	}
 	return (0);
+}
+
+void	Server::send_ping(int fd)
+{
+	write (fd, "PING 10\n", 8);
+	std::string buffer;
+
+	int bits = get_line(fd, buffer);
+	if (bits < 0)
+		return ;
+	if (buffer.compare(0, 8, "PONG :10") == 0)
+		return ;
 }
