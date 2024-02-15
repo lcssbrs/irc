@@ -282,7 +282,6 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 {
 	std::map<int, Client *>::iterator findclient;
 
-	std::cout << buffer;
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{
