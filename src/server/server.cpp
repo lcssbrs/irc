@@ -245,25 +245,44 @@ void Server::remove_client_from_channel(Client * kick)
 
 void	Server::sendmessagetoclient(Client *client, std::string buffer)
 {
-	std::string name = buffer.substr(8, buffer.find(' ', 8) - 8);
-	std::string msg = ":" + client->getNickname() + "!" + client->getNickname() + "@127.0.0.1 " + buffer;
-	std::map<int, Client *>::iterator it = clients.begin();
-	while (it != clients.end())
+	if (buffer.find('#' < buffer.find(':')))
 	{
-		if (it->second->getNickname().compare(name) == 0)
+		std::string name = buffer.substr(9, buffer.find(' ', 9) - 9);
+		std::map<std::string, Channel *>::iterator it = channels.begin();
+		while (it != channels.end())
 		{
-			send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
-			return ;
+			if (it->second->getName() == name)
+			{
+				it->second->sendMessage(client, buffer.substr(buffer.find(':') + 1));
+				return ;
+			}
+			it++;
 		}
-		it++;
+		sendResponse(client->getFd(), "401", client->getNickname(), "");
 	}
-	sendResponse(client->getFd(), "401", client->getNickname(), "");
+	else
+	{
+		std::string name = buffer.substr(8, buffer.find(' ', 8) - 8);
+		std::string msg = ":" + client->getNickname() + "!" + client->getNickname() + "@127.0.0.1 " + buffer;
+		std::map<int, Client *>::iterator it = clients.begin();
+		while (it != clients.end())
+		{
+			if (it->second->getNickname().compare(name) == 0)
+			{
+				send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+				return ;
+			}
+			it++;
+		}
+		sendResponse(client->getFd(), "401", client->getNickname(), "");
+	}
 }
 
 void Server::parsing_msg(std::string & buffer, int fd, int i)
 {
 	std::map<int, Client *>::iterator findclient;
 
+	std::cout << buffer;
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{

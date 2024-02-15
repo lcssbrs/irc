@@ -1,12 +1,5 @@
 #include "../../includes/irc.hpp"
 
-void	Channel::printClients(void)
-{
-	std::cout << "Membres du channel:" << std::endl;
-	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
-			std::cout << it->second->getNickname() << std::endl;
-}
-
 Channel::Channel(std::string &name, std::string password, Client *creator) : _name(name), _password (password)
 {
 	_operators[creator->getNickname()] = creator;
@@ -203,7 +196,7 @@ void	Channel::userJoin(Client *user, std::string password)
 	}
 	if (user)
 	{
-		sentNewcomer(user);
+		sendNewcomer(user);
 		std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN #" + _name + "\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
@@ -232,7 +225,14 @@ void	Channel::userJoin(Client *user, std::string password)
 	}
 }
 
-int		Channel::userLeave(Client *user)
+void	Channel::sendNewcomer(Client *user)
+{
+	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN :#" + _name + "\n";
+	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
+		send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+}
+
+int		Channel::userLeave(Client *user, std::string msg)
 {
 	if (_operators.find(user->getNickname()) != _operators.end())
 	{
@@ -248,24 +248,33 @@ int		Channel::userLeave(Client *user)
 		return (0);
 	}
 	_regulars.erase(user->getNickname());
+	sendLeave(user, msg);
 	return (0);
 }
 
-void	Channel::printStatus(void)
+void	Channel::sendLeave(Client *user, std::string &msg)
 {
-	std::cout << "Channel: " << _name << std::endl;
-	std::cout << "Invite only: " << _inviteOnly << std::endl;
-	std::cout << "Restricted topic: " << _restrictTopic << " (" << _topic << ")" << std::endl;
-	std::cout << "Password needed: " << _passwordUse << " (" << _password << ")" << std::endl;
-	std::cout << "Limit user: " << _limitUser << " (" << _nUser << ")" << std::endl;
-	std::cout << "Operators: " << std::endl;
-	for (std::map<std::string, Client *>::iterator it = _operators.begin(); it != _operators.end(); it++)
-		std::cout << it->second->getNickname() << std::endl;
+	std::string res = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 PART #" + _name + msg;
+	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
+		send(it->second->getFd(), res.c_str(), res.size(), MSG_CONFIRM);
 }
 
-void	Channel::sentNewcomer(Client *user)
+void	Channel::sendMessage(Client *user, std::string msg)
 {
-	std::string msg = ":" + user->getNickname() + "!" + user->getUsername()[0] + "@127.0.0.1 JOIN :#" + _name + "\n";
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+	{
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		return ;
+	}
+	std::string res = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 PRIVMSG #" + _name + " :" + msg + "\n";
 	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
-		send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	{
+		if (it->second != user)
+			send(it->second->getFd(), res.c_str(), res.size(), MSG_CONFIRM);
+	}
+}
+
+const std::string	&Channel::getName(void) const
+{
+	return (_name);
 }
