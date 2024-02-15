@@ -282,6 +282,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else if (buffer.compare(0, 5, "mode ") == 0)
+				mode_channel(buffer.substr(5, buffer.size() - 6), findclient->second);
+			else if (buffer.compare(0, 6, "MODE #") == 0)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else if (buffer.compare(0, 4, "PONG") == 0)
 			{
@@ -304,13 +306,22 @@ void	Server::mode_channel(std::string channel, Client * client)
 	(void)client;
 	size_t lenName = channel.find(" ");
 	std::string name = channel.substr(0, lenName);
-	if (channels.find(name) == channels.end())
-	{
-		// sendResponse(client->getFd(), "code", "name", "error"); // desole hugo
-		return ;
-	}
-	//else
-		//std::cout << "test\n";
+	std::string mode = channel.substr(lenName + 1, channel.size() - (lenName));
+	bool boole = true;
+	size_t lenMode = mode.find(" ");
+	mode = mode.substr(0, mode.size() - lenMode);
+	std::string arg = channel;
+	for(int i = 0; i < 2 ;i++)
+		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
+	if (arg == mode)
+		arg = "";
+	if (mode.compare(0, 1, "-") == 0)
+		boole = false;
+	if (mode.compare(0, 1, "+") == 0 or mode.compare(0, 1, "-") == 0)
+		mode = mode.substr(1, lenMode - 1);
+	std::cout << arg << std::endl;
+	if (channels.find(name) != channels.end())
+		channels.find(name)->second->mode(client, boole, mode, arg);
 }
 
 int	Server::checkNickname(std::string nick, int fd)
