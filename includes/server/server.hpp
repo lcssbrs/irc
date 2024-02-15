@@ -16,6 +16,7 @@
 #include "../client/client.hpp"
 #include "../channel/channel.hpp"
 #include <unistd.h>
+#include <ctime>
 
 #define backlog 42
 
@@ -40,6 +41,8 @@ class Server
 		void	init_server();
 		void	manage_loop();
 		int		manage_server();
+		void	send_ping(int fd);
+		void	mode_channel(std::string channel, Client * client);
 		void	create_client(std::string & buffer, Client & client, int i);
 		void	create_channel(std::string name, Client * client);
 		void	remove_client_from_channel(Client * kick);
