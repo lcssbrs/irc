@@ -1,4 +1,7 @@
-# Prerequisites
+nc localhost 6667
+PASS :test
+NICK hbaduel
+USER prout# Prerequisites
 *.d
 
 # Compiled Object files

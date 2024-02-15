@@ -5,4 +5,6 @@
 #include "client/client.hpp"
 #include "channel/channel.hpp"
 
+void	sendResponse(int fd, std::string code, const std::string &name, std::string error);
+
 #endif

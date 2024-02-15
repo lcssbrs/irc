@@ -1,6 +1,6 @@
 #include "../../includes/server/server.hpp"
 
-void	sendResponse(int fd, std::string code, std::string &name, std::string error)
+void	sendResponse(int fd, std::string code, const std::string &name, std::string error)
 {
 	std::string msg = ":127.0.0.1 " + code + " " + name + " :" + error + "\n";
 	send(fd, msg.c_str(), msg.size(), MSG_CONFIRM);
@@ -136,7 +136,7 @@ void Server::manage_loop()
 						else if (bytes_received == 0)
 						{
                             // Déconnexion du client
-                            std::cout << "Client disconnected" << std::endl;
+                            std::cerr << "Client " << clients.find(fds[i].fd)->second->getNickname() << "!" << clients.find(fds[i].fd)->second->getUsername() << " has leaved the server." << std::endl;
                             close(fds[i].fd);
 							delete (clients.find(fds[i].fd)->second);
 							clients.erase(fds[i].fd);
@@ -172,7 +172,7 @@ int Server::manage_server()
 void	Server::closeClient(Client & client, int i)
 {
 	int fd = client.getFd();
-	std::cerr << "Client disconnected " << fd << std::endl;
+	std::cerr << "Client " << fd << " has been kicked from the server." << std::endl;
 	close(fd);
 	delete (&client);
 	clients.erase(clients.find(fd));
@@ -187,33 +187,43 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	{
 		if (buffer.substr(6, buffer.size() - 7) != password)
 		{
+			sendResponse(client.getFd(), "464", client.getNickname(), "Password Incorrect");
+			send(client.getFd(), "ERROR :Closing Link: localhost (Bad Password)\n", 46, MSG_CONFIRM);
 			closeClient(client, i);
 			return ;
 		}
 		client.setPasstoTrue();
 	}
-	else if (!buffer.compare(0, 4, "NICK") and client.getNickname() == "" and client.getPass() == true)
+	else if (!buffer.compare(0, 4, "NICK") and client.getPass() == true)
 	{
 		if (checkNickname(buffer.substr(5, buffer.size() - 6), client.getFd()))
 			return ;
 		client.setNickname(buffer.substr(5, buffer.size() - 6));
-		std::cout << client.getNickname() << std::endl;
 	}
-	else if (!buffer.compare(0, 4, "USER") and client.getNickname() != "" and client.getPass() == true)
+	else if (!buffer.compare(0, 4, "USER") and client.getPass() == true)
+		client.setUsername(buffer.substr(buffer.find(':') + 1, buffer.size() - buffer.find(':') - 2));
+	else
 	{
-		client.setUsername(buffer.substr(5, buffer.size() - 6));
+		if (client.getPass() == false)
+		{
+			sendResponse(client.getFd(), "464", client.getNickname(), "Password Incorrect");
+			send(client.getFd(), "ERROR :Closing Link: localhost (Bad Password)\n", 46, MSG_CONFIRM);
+		}
+		closeClient(client, i);
+	}
+	if (client.getPass() == true and client.getNickname() != "" and client.getUsername() != "")
+	{
 		client.setCreatedtoTrue();
 		std::string msg = ":127.0.0.1 001 " + client.getNickname() + " :" + "Welcome to the best IRC server of 42 " + client.getNickname() + "!\n";
 		send(client.getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+		std::cout << "Client " << client.getNickname() << "!" << client.getUsername() << " connected!" << std::endl;
 	}
-	else
-		closeClient(client, i);
 }
 
 void Server::create_channel(std::string & name, Client * client)
 {
 	std::cout << "channel " << name << " created by " << client->getNickname() << "\n" ;
-	channels[name] = new Channel(name, client);
+	channels[name] = new Channel(name, "", client);
 }
 
 void Server::remove_client_from_channel(Client * kick)
@@ -223,24 +233,19 @@ void Server::remove_client_from_channel(Client * kick)
 
 void	Server::sendmessagetoclient(Client *client, std::string buffer)
 {
-	std::cout << "buffer: " << buffer;
-	size_t lenName = buffer.find(" ");
-	std::string nameClient = buffer.substr(0, lenName);
-	std::string rest = buffer.substr(lenName + 2, buffer.size() - 1);
-	std::cout << "name client: " << nameClient;
-	std::cout << "rest: " << rest;
+	std::string name = buffer.substr(8, buffer.find(' ', 8) - 8);
+	std::string msg = ":" + client->getNickname() + "!" + client->getNickname() + "@127.0.0.1 " + buffer;
 	std::map<int, Client *>::iterator it = clients.begin();
 	while (it != clients.end())
 	{
-		if (it->second->getNickname().compare(nameClient) == 0)
+		if (it->second->getNickname().compare(name) == 0)
 		{
-			write(it->second->getFd(), client->getNickname().c_str(), client->getNickname().size());
-			write(it->second->getFd(), ": ", 1);
-			write(it->second->getFd(), rest.c_str(), rest.size());
+			send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			return ;
 		}
 		it++;
 	}
-	//401 ERR_NOSUCHNICK
+	sendResponse(client->getFd(), "401", client->getNickname(), "");
 }
 
 void Server::parsing_msg(std::string & buffer, int fd, int i)
@@ -250,7 +255,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{
-		if (clients.find(fd) != clients.end() && findclient->second->getCreated() == false)
+		if (findclient->second->getCreated() == false)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
@@ -260,9 +265,9 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				create_channel(name, findclient->second);
 			}
 			else if (buffer.compare(0, 7, "PRIVMSG") == 0)
-			{
-				sendmessagetoclient(findclient->second, buffer.substr(8));
-			}
+				sendmessagetoclient(findclient->second, buffer);
+			else
+				std::cout << buffer;
 		}
 	}
 	else
