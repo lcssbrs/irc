@@ -41,7 +41,7 @@ class Server
 		void	manage_loop();
 		int		manage_server();
 		void	create_client(std::string & buffer, Client & client, int i);
-		void	create_channel(std::string & name, Client * client);
+		void	create_channel(std::string name, Client * client);
 		void	remove_client_from_channel(Client * kick);
 		void	parsing_msg(std::string & buffer, int fd, int i);
 		void	closeClient(Client &client, int i);
