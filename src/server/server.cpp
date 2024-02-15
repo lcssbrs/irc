@@ -123,7 +123,7 @@ void Server::manage_loop()
                         }
                     }
 					else
-					{	
+					{
                         // Données disponibles sur un client existant
                         std::string buffer;
                         int bytes_received = get_line(fds[i].fd, buffer);
@@ -303,9 +303,11 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 
 void	Server::mode_channel(std::string channel, Client * client)
 {
+	(void)channel;
+	(void)client;
 	if (channels.find(channel) == channels.end())
 	{
-		sendResponse(client->getFd(), "code", "name", "error"); // desole hugo
+		// sendResponse(client->getFd(), "code", "name", "error"); // desole hugo
 		return ;
 	}
 	else

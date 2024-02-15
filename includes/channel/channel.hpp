@@ -18,7 +18,7 @@ class Channel {
 		Client	*invite(Client *user, std::string &name, std::map<int, Client *> &clients);
 		void	topic(Client *user) const;
 		void	topic(Client *user, std::string &topic);
-		void	mode(Client *user, std::string &option, std::string &arg);
+		void	mode(Client *user, bool change, std::string &option, std::string &arg);
 
 		void	userJoin(Client *user, std::string password);
 		int		userLeave(Client *user);

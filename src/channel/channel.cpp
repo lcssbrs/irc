@@ -119,7 +119,7 @@ void	Channel::topic(Client *user, std::string &topic)
 	_topic = topic;
 }
 
-void	Channel::mode(Client *user, std::string &option, std::string &arg)
+void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
 {
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
@@ -127,16 +127,16 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 		return ;
 	}
 	if (option == "i")
-		_inviteOnly = !_inviteOnly;
+		_inviteOnly = change;
 	else if (option == "t")
-		_restrictTopic = !_restrictTopic;
+		_restrictTopic = change;
 	else if (option == "k")
 	{
-		_passwordUse = !_passwordUse;
+		_passwordUse = change;
 		if (_passwordUse == true and arg == "")
 		{
 			sendResponse(user->getFd(), "461", user->getNickname(), "");
-			_passwordUse = !_passwordUse;
+			_passwordUse = false;
 			return ;
 		}
 		_password = arg;
@@ -155,26 +155,26 @@ void	Channel::mode(Client *user, std::string &option, std::string &arg)
 	}
 	else if (option == "l")
 	{
-		_limitUser = !_limitUser;
+		_limitUser = change;
 		if (_limitUser == true)
 		{
 			if (arg == "")
 			{
 				sendResponse(user->getFd(), "461", user->getNickname(), "");
-				_limitUser = !_limitUser;
+				_limitUser = false;
 				return ;
 			}
 			int i = atoi(arg.c_str());
 			if (i <= 0)
 			{
 				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than 0)", 54); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
-				_limitUser = !_limitUser;
+				_limitUser = false;
 				return ;
 			}
 			else if (i < static_cast<int>(_regulars.size()))
 			{
 				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than the number of the channel's clients)", 88); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
-				_limitUser = !_limitUser;
+				_limitUser = false;
 				return ;
 			}
 			_nUser = i;
