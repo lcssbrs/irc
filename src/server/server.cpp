@@ -224,7 +224,10 @@ void Server::create_channel(std::string name, Client * client)
 {
 	size_t lenName = name.find(" ");
 	std::string newName = name.substr(0, lenName);
+	std::string newName = newName.substr(0, newName.find(" "));
 	std::string password = name.substr(lenName + 1, name.size() - (lenName));
+	if (password == newName)
+		password = "";
 	if (channels.find(newName) == channels.end())
 	{
 		std::cout << "channel " << newName << " created by " << client->getNickname() << "\n" ;
@@ -305,6 +308,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			//	std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
 			//	write(findclient->second->getFd(), result.c_str(), result.size());
 			//}
+			else if (buffer.compare(0, 5, "KICK") == 0)
+				std::cout << "test\n";
 			else
 				std::cout << buffer;
 		}
@@ -321,6 +326,8 @@ void	Server::mode_channel(std::string channel, Client * client)
 	bool boole = true;
 	size_t lenMode = mode.find(" ");
 	mode = mode.substr(0, mode.size() - lenMode);
+	if (mode == name)
+		mode = "";
 	std::string arg = channel;
 	for(int i = 0; i < 2 ;i++)
 		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
@@ -360,6 +367,13 @@ int	Server::checkNickname(std::string nick, int fd)
 		}
 	}
 	return (0);
+}
+
+void	Server::ft_kick(Client * client, std::string channel ,std::string name)
+{
+	if (channels.find(channel) == channels.end())
+		return ;
+	channels.find(channel)->second->kick(client, name);
 }
 
 void	Server::send_ping(int fd)
