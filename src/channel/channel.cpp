@@ -13,6 +13,7 @@ Channel::Channel(std::string &name, std::string password, Client *creator) : _na
 	else
 		_passwordUse = false;
 	_nUser = 0;
+	setTopicInformation(creator);
 	std::string msg = ":" + creator->getNickname() + "!" + creator->getUsername() + "@127.0.0.1 JOIN #" + name + "\n";
 	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
@@ -92,7 +93,8 @@ void	Channel::topic(Client *user) const
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		return ;
 	}
-	sendResponse(user->getFd(), "332", user->getNickname(), _topic);
+	std::string msg = ":127.0.0.1 332 " + user->getNickname() + " #" + _name + " :" + _topic + '\n';
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
 
 void	Channel::topic(Client *user, std::string &topic)
@@ -112,6 +114,11 @@ void	Channel::topic(Client *user, std::string &topic)
 		}
 	}
 	_topic = topic;
+	setTopicInformation(user);
+	std::string msg = ":127.0.0.1 332 " + user->getNickname() + " #" + _name + " :" + _topic + "\n";
+	sendAll(msg);
+	msg = ":127.0.0.1 333 " + user->getNickname() + " #" + _name + ' ' + _topicsetter + ' ' + _topicdate + '\n';
+	sendAll(msg);
 }
 
 void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
@@ -289,8 +296,11 @@ void	Channel::userJoin(Client *user, std::string password)
 			msg = ":127.0.0.1 331 " + user->getNickname() + " #" + _name + " :No topic set\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
-		msg = ":127.0.0.1 333 " + user->getNickname() + " #" + _name + " " + _operators.begin()->second->getNickname() + "!~" + _operators.begin()->second->getNickname()[0] + "@127.0.0.1 1547691506\n";
-		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+		if (_topic != "")
+		{
+			msg = ":127.0.0.1 333 " + user->getNickname() + " #" + _name + ' ' + _topicsetter + ' ' + _topicdate + '\n';
+			send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+		}
 
 		msg = ":127.0.0.1 353 " + user->getNickname() + " = #" + _name + " :";
 		for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
@@ -377,4 +387,13 @@ std::map<std::string, Client *> & Channel::getOpe(void)
 std::map<std::string, Client *> & Channel::getReg(void)
 {
 	return _regulars;
+}
+
+void	Channel::setTopicInformation(Client *user)
+{
+	_topicsetter = user->getNickname() + '!' + user->getUsername() + "@127.0.0.1";
+	time_t	timestamp = time(NULL);
+	char buffer[50];
+	std::sprintf(buffer, "%d", static_cast<int>(timestamp));
+	_topicdate = buffer;
 }

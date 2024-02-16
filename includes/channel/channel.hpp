@@ -4,6 +4,8 @@
 #include <map>
 #include <cstdlib>
 #include <unistd.h>
+#include <cstdio>
+#include <ctime>
 #include "../client/client.hpp"
 
 class Client;
@@ -28,6 +30,7 @@ class Channel {
 		void	sendAll(std::string &msg);
 		std::map<std::string, Client *> &getOpe(void);
 		std::map<std::string, Client *> &getReg(void);
+		void	setTopicInformation(Client *user);
 
 		//getters
 		const std::string	&getName(void) const;
@@ -40,6 +43,8 @@ class Channel {
 		bool	_inviteOnly;
 		bool	_restrictTopic;
 		std::string	_topic;
+		std::string	_topicsetter;
+		std::string	_topicdate;
 		bool	_passwordUse;
 		std::string	_password;
 		bool	_limitUser;
