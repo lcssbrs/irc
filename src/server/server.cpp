@@ -243,10 +243,6 @@ void Server::create_channel(std::string name, Client * client)
 		channels[newName] = new Channel(newName, password, client);
 	}
 	else if (channels.find(newName) != channels.end())
-	{
-		channels.find(newName)->second->userJoin(client, password);
-	}
-	else if (channels.find(newName) != channels.end())
 		channels.find(newName)->second->userJoin(client, password);
 }
 
