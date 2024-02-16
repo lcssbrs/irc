@@ -366,12 +366,13 @@ int	Server::checkNickname(std::string nick, int fd)
 
 void	Server::ft_kick(Client * client, std::string buffer)
 {
-	(void)client;
-	std::cout << buffer << std::endl;
 	std::string channel = buffer.substr(0, buffer.find(" "));
-	std::cout << channel << std::endl;
 	buffer = buffer.substr(buffer.find(" ") + 1, buffer.size() - (buffer.find(" ") + 1));
-	std::cout << buffer << std::endl;
+	std::string nickname = buffer.substr(0, buffer.find(" "));
+	if (nickname == channel)
+		nickname = "";
+	if (channels.find(channel) != channels.end())
+		channels.find(channel)->second->kick(client, nickname);
 }
 
 void	Server::send_ping(int fd)
