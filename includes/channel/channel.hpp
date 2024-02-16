@@ -15,7 +15,7 @@ class Channel {
 
 		//operators command
 		void	kick(Client *user, std::string &name);
-		Client	*invite(Client *user, std::string &name, std::map<int, Client *> &clients);
+		void	invite(Client *user, std::string &name, std::map<int, Client *> &clients);
 		void	topic(Client *user) const;
 		void	topic(Client *user, std::string &topic);
 		void	mode(Client *user, bool change, std::string &option, std::string &arg);
@@ -33,6 +33,7 @@ class Channel {
 	private:
 		std::map<std::string, Client *>	_operators;
 		std::map<std::string, Client *>	_regulars;
+		std::map<std::string, Client *>	_invited;
 		std::string	_name;
 		bool	_inviteOnly;
 		bool	_restrictTopic;

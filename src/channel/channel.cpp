@@ -31,7 +31,10 @@ Channel::~Channel(void) {}
 void Channel::kick(Client *user, std::string &name)
 {
 	if (_regulars.find(user->getNickname()) == _regulars.end())
-		sendResponse(user->getFd(), "442", user->getNickname(), "");
+	{
+		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 	else if (_operators.find(user->getNickname()) == _operators.end())
 		sendResponse(user->getFd(), "482", user->getNickname(), "");
 	else if (name == "")
@@ -43,51 +46,36 @@ void Channel::kick(Client *user, std::string &name)
 	}
 	else if (_regulars.find(name) == _regulars.end())
 		sendResponse(user->getFd(), "442", user->getNickname(), "");
-	else if (_regulars[name] == user)
-	{
-		std::string msg = ":127.0.0.1 Error :You can't kick yourself\n";
-		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
-	}
 	else
 	{
-		std::string	msg = ":"  + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 KICK #" + _name + _regulars[name]->getNickname() + ":\n";
+		std::string	msg = ":"  + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 KICK #" + _name + ' ' + _regulars[name]->getNickname() + " :\n";
 		sendAll(msg);
 		_regulars.erase(name);
 	}
 }
 
-Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *> &clients)
+void	Channel::invite(Client *user, std::string &name, std::map<int, Client *> &clients)
 {
 	if (_regulars.find(user->getNickname()) == _regulars.end())
 	{
-		sendResponse(user->getFd(), "442", user->getNickname(), "");
-		return (NULL);
-	}
-	else if (_operators.find(user->getNickname()) == _operators.end())
-	{
-		sendResponse(user->getFd(), "482", user->getNickname(), "");
-		return (NULL);
+		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
 	else if (name == "")
-	{
 		sendResponse(user->getFd(), "461", user->getNickname(), "");
-		return (NULL);
-	}
 	else if (_regulars.find(name) != _regulars.end())
-	{
 		sendResponse(user->getFd(), "443", user->getNickname(), "");
-		return (NULL);
-	}
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->second->getNickname() == name)
 		{
-			sendResponse(user->getFd(), "341", user->getNickname(), "");
-			return (it->second);
+			std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 INVITE " + name + " #" + _name + '\n';
+			send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			_invited[name] = it->second;
+			return ;
 		}
 	}
 	sendResponse(user->getFd(), "401", user->getNickname(), "");
-	return (NULL);
 }
 
 void	Channel::topic(Client *user) const
@@ -129,7 +117,8 @@ void	Channel::mode(Client *user, bool change, std::string &option, std::string &
 		return ;
 	if (_regulars.find(user->getNickname()) == _regulars.end())
 	{
-		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		return ;
 	}
 	if (_operators.find(user->getNickname()) == _operators.end())
@@ -269,17 +258,22 @@ void	Channel::userJoin(Client *user, std::string password)
 		sendResponse(user->getFd(), "471", user->getNickname(), "");
 		return ;
 	}
-	else if (_passwordUse == true and password != _password)
+	if (_invited.find(user->getNickname()) == _invited.end())
 	{
-		sendResponse(user->getFd(), "475", user->getNickname(), "");
-		return ;
+		if (_passwordUse == true and password != _password)
+		{
+			sendResponse(user->getFd(), "475", user->getNickname(), "");
+			return ;
+		}
+		else if (_inviteOnly == true)
+		{
+			std::string msg = ":127.0.0.1 " + user->getNickname() + " #" + _name + " :Cannot join channel, you must be invited\n";
+			send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			return ;
+		}
 	}
-	else if (_inviteOnly == true)
-	{
-		std::string msg = ":127.0.0.1 " + user->getNickname() + " #" + _name + " :Cannot join channel, you must be invited\n";
-		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
-		return ;
-	}
+	else
+		_invited.erase(user->getNickname());
 	if (user)
 	{
 		sendNewcomer(user);
