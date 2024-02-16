@@ -253,7 +253,7 @@ void Server::remove_client_from_channel(Client * kick)
 
 void	Server::sendmessagetoclient(Client *client, std::string buffer)
 {
-	if (buffer.find('#' < buffer.find(':')))
+	if (buffer.find('#') < buffer.find(':'))
 	{
 		std::string name = buffer.substr(9, buffer.find(' ', 9) - 9);
 		std::map<std::string, Channel *>::iterator it = channels.begin();
