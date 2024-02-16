@@ -224,20 +224,18 @@ void Server::create_channel(std::string name, Client * client)
 {
 	size_t lenName = name.find(" ");
 	std::string newName = name.substr(0, lenName);
-	std::string newName = newName.substr(0, newName.find(" "));
+	newName = newName.substr(0, newName.find(" "));
 	std::string password = name.substr(lenName + 1, name.size() - (lenName));
 	if (password == newName)
 		password = "";
 	if (channels.find(newName) == channels.end())
 	{
 		std::cout << "channel " << newName << " created by " << client->getNickname() << "\n" ;
-		channels[name] = new Channel(name, password, client);
-		//channels.find(name)->second->userJoin(client, password);
-		//message a send
+		channels[newName] = new Channel(newName, password, client);
 	}
-	else if (channels.find(name) != channels.end())
+	else if (channels.find(newName) != channels.end())
 	{
-		channels.find(name)->second->userJoin(client, password);
+		channels.find(newName)->second->userJoin(client, password);
 	}
 }
 
@@ -331,7 +329,7 @@ void	Server::mode_channel(std::string channel, Client * client)
 	std::string arg = channel;
 	for(int i = 0; i < 2 ;i++)
 		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
-	if (arg == mode)
+	if (arg == mode or arg == name)
 		arg = "";
 	if (mode.compare(0, 1, "-") == 0)
 		boole = false;

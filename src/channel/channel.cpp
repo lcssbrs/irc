@@ -28,41 +28,42 @@ Channel::Channel(std::string &name, std::string password, Client *creator) : _na
 
 Channel::~Channel(void) {}
 
-Client	*Channel::kick(Client *user, std::string &name)
+void Channel::kick(Client *user, std::string &name)
 {
-	if (_operators.find(user->getNickname()) == _operators.end())
-	{
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
+	else if (_operators.find(user->getNickname()) == _operators.end())
 		sendResponse(user->getFd(), "482", user->getNickname(), "");
-		return (NULL);
-	}
 	else if (name == "")
-	{
 		sendResponse(user->getFd(), "461", user->getNickname(), "");
-		return (NULL);
-	}
 	else if (_operators.find(name) != _operators.end())
 	{
-		// write(user->getFd(), "ERROR: You can't kick an operator", 30); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
-		return (NULL);
+		std::string msg = ":127.0.0.1 Error :You can't kick an operator\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
 	else if (_regulars.find(name) == _regulars.end())
-	{
 		sendResponse(user->getFd(), "442", user->getNickname(), "");
-		return (NULL);
-	}
 	else if (_regulars[name] == user)
 	{
-		// write(user->getFd(), "ERROR: You can't kick yourself", 30); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
-		return (NULL);
+		std::string msg = ":127.0.0.1 Error :You can't kick yourself\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
-	Client *temp = _regulars[name];
-	_regulars.erase(name);
-	return (temp);
+	else
+	{
+		std::string	msg = ":"  + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 KICK #" + _name + _regulars[name]->getNickname() + ":\n";
+		sendAll(msg);
+		_regulars.erase(name);
+	}
 }
 
 Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *> &clients)
 {
-	if (_operators.find(user->getNickname()) == _operators.end())
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+	{
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		return (NULL);
+	}
+	else if (_operators.find(user->getNickname()) == _operators.end())
 	{
 		sendResponse(user->getFd(), "482", user->getNickname(), "");
 		return (NULL);
@@ -91,6 +92,11 @@ Client	*Channel::invite(Client *user, std::string &name, std::map<int, Client *>
 
 void	Channel::topic(Client *user) const
 {
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+	{
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		return ;
+	}
 	if (_topic == "")
 	{
 		sendResponse(user->getFd(), "331", user->getNickname(), "");
@@ -101,6 +107,11 @@ void	Channel::topic(Client *user) const
 
 void	Channel::topic(Client *user, std::string &topic)
 {
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+	{
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		return ;
+	}
 	if (_restrictTopic == true)
 	{
 		if (_operators.find(user->getNickname()) == _operators.end())
@@ -114,37 +125,95 @@ void	Channel::topic(Client *user, std::string &topic)
 
 void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
 {
-	std::cout << "option: " << option << ", arg: " << arg << std::endl;
+	if (option == "b" or option == "")
+		return ;
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+	{
+		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		return ;
+	}
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
 		sendResponse(user->getFd(), "482", user->getNickname(), "");
 		return ;
 	}
 	if (option == "i")
+	{
 		_inviteOnly = change;
+		std::string msg = ":" + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 MODE #" + _name + ' ';
+		if (change == true)
+			msg += "+i\n";
+		else
+			msg += "-i\n";
+		sendAll(msg);
+
+	}
 	else if (option == "t")
+	{
 		_restrictTopic = change;
+		std::string msg = ":" + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 MODE #" + _name + ' ';
+		if (change == true)
+			msg += "+t\n";
+		else
+			msg += "-t\n";
+		sendAll(msg);
+	}
 	else if (option == "k")
 	{
 		_passwordUse = change;
-		if (_passwordUse == true and arg == "")
+		if (_passwordUse == true and _password == "" and arg == "")
 		{
 			sendResponse(user->getFd(), "461", user->getNickname(), "");
 			_passwordUse = false;
 			return ;
 		}
 		_password = arg;
+		std::string msg = ":" + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 MODE #" + _name + ' ';
+		if (change == true)
+			msg += "+k " + _password + '\n';
+		else
+			msg += "-k\n";
+		sendAll(msg);
 	}
 	else if (option == "o")
 	{
-		if (_operators.find(arg) != _operators.end())
-			_operators.erase(arg);
-		else if (_regulars.find(arg) != _regulars.end())
-			_operators[arg] = _regulars.find(arg)->second;
+		if (change == true)
+		{
+			if (_operators.find(arg) != _operators.end())
+			{
+				std::string msg = ":127.0.0.1 Error :User is already operator\n";
+				send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			}
+			else if (_regulars.find(arg) != _regulars.end())
+			{
+				_operators[arg] = _regulars[arg];
+				std::string msg = ":" + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 MODE #" + _name + " +o " + _regulars[arg]->getNickname() + "\n";
+				sendAll(msg);
+			}
+			else
+			{
+				sendResponse(user->getFd(), "443", user->getNickname(), "");
+				return ;
+			}
+		}
 		else
 		{
-			sendResponse(user->getFd(), "442", user->getNickname(), "");
-			return ;
+			if (_operators.find(arg) != _operators.end())
+			{
+				_operators.erase(arg);
+				std::string msg = ":" + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 MODE #" + _name + " -o " + _regulars[arg]->getNickname() + "\n";
+				sendAll(msg);
+			}
+			else if (_regulars.find(arg) != _regulars.end())
+			{
+				std::string msg = ":127.0.0.1 Error :User is not an operator\n";
+				send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			}
+			else
+			{
+				std::string msg = ":127.0.0.1 Error :User is not a channel member\n";
+				send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+			}
 		}
 	}
 	else if (option == "l")
@@ -158,24 +227,37 @@ void	Channel::mode(Client *user, bool change, std::string &option, std::string &
 				_limitUser = false;
 				return ;
 			}
+			else if (arg.find_first_not_of("+-0123456789") != std::string::npos)
+			{
+				std::string msg = ":127.0.0.1 Error :Invalid argument (only takes numbers, + and -)\n";
+				send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+				_limitUser = false;
+				return ;
+			}
 			int i = atoi(arg.c_str());
 			if (i <= 0)
 			{
-				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than 0)", 54); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
+				std::string msg = ":127.0.0.1 Error :Invalid user limit (it needs to be more than 0)\n";
+				send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 				_limitUser = false;
 				return ;
 			}
 			else if (i < static_cast<int>(_regulars.size()))
 			{
-				// write(user->getFd(), "ERROR: Invalid user limit (it needs to be more than the number of the channel's clients)", 88); /!\ ERROR pas déjà présente sur IRC, voir quoi faire pour le code
+				std::string msg = ":127.0.0.1 Error :Invalid user limit (it needs to be more than the number of the channel's clients)";
+				send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 				_limitUser = false;
 				return ;
 			}
 			_nUser = i;
+			std::string msg = ":" + user->getNickname() + "!" + user->getNickname() + "@127.0.0.1 MODE #" + _name + ' ';
+			if (change == true)
+				msg += "+l " + arg + '\n';
+			else
+				msg += "-l\n";
+			sendAll(msg);
 		}
 	}
-	else if (option == "b" or option == "")
-		return ;
 	else
 		sendResponse(user->getFd(), "472", user->getNickname(), "");
 }
@@ -276,6 +358,12 @@ void	Channel::sendMessage(Client *user, std::string msg)
 		if (it->second != user)
 			send(it->second->getFd(), res.c_str(), res.size(), MSG_CONFIRM);
 	}
+}
+
+void	Channel::sendAll(std::string &msg)
+{
+	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
+		send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
 
 const std::string	&Channel::getName(void) const
