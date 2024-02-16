@@ -281,12 +281,15 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 	std::map<int, Client *>::iterator findclient;
 
 	findclient = clients.find(fd);
+	//time_t create = time(NULL);
 	if (findclient != clients.end())
 	{
 		if (findclient->second->getCreated() == false)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
+			//send_ping(findclient->second);
+			//std::cout << buffer << std::endl;
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
@@ -298,13 +301,19 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else if (buffer.compare(0, 6, "MODE #") == 0)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
-			//else if (buffer.compare(0, 4, "PING") == 0)
+			//else if (buffer.compare(0, 5, "PING ") == 0)
 			//{
-			//	std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
-			//	write(findclient->second->getFd(), result.c_str(), result.size());
+			//	if(difftime(findclient->second->getTimeping(), create) >= 5)
+			//	{
+			//		std::string result = "PONG :" + buffer.substr(5, buffer.size() - 6);
+			//		write(findclient->second->getFd(), result.c_str(), result.size());
+			//		findclient->second->setTimeping(create);
+			//	}
 			//}
 			else if (buffer.compare(0, 6, "KICK #") == 0)
 				ft_kick(findclient->second, buffer.substr(6, buffer.size() - 7));
+			else if (buffer.compare(0, 7, "INVITE ") == 0)
+				ft_invite(findclient->second, buffer.substr(7, buffer.size() - 8));
 			else
 				std::cout << buffer;
 		}
@@ -377,14 +386,27 @@ void	Server::ft_kick(Client * client, std::string buffer)
 		channels.find(channel)->second->kick(client, nickname);
 }
 
-void	Server::send_ping(int fd)
+void	Server::send_ping(Client * client)
 {
-	write (fd, "PING 10\n", 8);
-	std::string buffer;
+	time_t newTime = time(NULL);
+	if (difftime(newTime, client->getTime()) >= 5)
+	{
+		write (client->getFd(), "PING 10\n", 8);
+		client->setTime(newTime);
+	}
+	return ;
+}
 
-	int bits = get_line(fd, buffer);
-	if (bits < 0)
-		return ;
-	if (buffer.compare(0, 8, "PONG :10") == 0)
-		return ;
+void Server::ft_invite(Client *client, std::string buffer)
+{
+	std::string name;
+	if (buffer.find("#") == std::string::npos)
+		name = "";
+	else
+		name = buffer.substr(buffer.find("#") + 1, buffer.size() - (buffer.find("#") + 1));
+	std::string iencli = buffer.substr(0, buffer.find(" "));
+	if (iencli.find("#") != std::string::npos)
+		iencli = "";
+	if(channels.find(name) != channels.end())
+		channels.find(name)->second->invite(client, iencli, clients);
 }

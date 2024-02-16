@@ -41,7 +41,7 @@ class Server
 		void	init_server();
 		void	manage_loop();
 		int		manage_server();
-		void	send_ping(int fd);
+		void	send_ping(Client * client);
 		void	mode_channel(std::string channel, Client * client);
 		void	create_client(std::string & buffer, Client & client, int i);
 		void	create_channel(std::string name, Client * client);
@@ -51,6 +51,7 @@ class Server
 		int		checkNickname(std::string nick, int fd);
 		void	sendmessagetoclient(Client * client, std::string buffer);
 		void	ft_kick(Client * client, std::string channel);
+		void	ft_invite(Client *client, std::string buffer);
 
 		class BindException: public std::exception
 		{
