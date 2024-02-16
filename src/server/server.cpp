@@ -101,8 +101,8 @@ void Server::manage_loop()
 		{
             for (size_t i = 0; i < fds.size(); ++i)
 			{
-				if (clients.find(fds[i].fd) != clients.end())
-					send_ping(clients.find(fds[i].fd)->second);
+				//if (clients.find(fds[i].fd) != clients.end())
+				//	send_ping(clients.find(fds[i].fd)->second);
                 if (fds[i].revents & POLLIN)
 				{
                     if (fds[i].fd == fd_server)
@@ -291,7 +291,6 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 	std::map<int, Client *>::iterator findclient;
 
 	findclient = clients.find(fd);
-	//time_t create = time(NULL);
 	if (findclient != clients.end())
 	{
 		if (findclient->second->getCreated() == false)
@@ -311,15 +310,13 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else if (buffer.compare(0, 6, "MODE #") == 0)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
-			//else if (buffer.compare(0, 5, "PING ") == 0)
-			//{
-			//	if(difftime(findclient->second->getTimeping(), create) >= 5)
-			//	{
-			//		std::string result = "PONG :" + buffer.substr(5, buffer.size() - 6);
-			//		write(findclient->second->getFd(), result.c_str(), result.size());
-			//		findclient->second->setTimeping(create);
-			//	}
-			//}
+			else if (buffer.compare(0, 4, "PING") == 0)
+			{
+			    std::string ping_param = buffer.substr(5); // Récupérez le paramètre du message PING
+			    std::string pong_message = "PONG " + ping_param + "\n"; // Construisez le message PONG
+			    send(findclient->second->getFd(), pong_message.c_str(), pong_message.size(), MSG_CONFIRM); // Envoyez le message PONG au client
+			}
+
 			else if (buffer.compare(0, 6, "KICK #") == 0)
 				ft_kick(findclient->second, buffer.substr(6, buffer.size() - 7));
 			else if (buffer.compare(0, 7, "INVITE ") == 0)
