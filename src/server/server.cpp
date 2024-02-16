@@ -430,5 +430,10 @@ void	Server::ft_topic(Client * client, std::string buffer)
 	if (buffer.find(":") != std::string::npos)
 		topic = buffer.substr(buffer.find(":") + 1, buffer.size() - (buffer.find(":") + 1));
 	if (channels.find(name) != channels.end())
-		channels.find(name)->second->topic(client, topic);
+	{
+		if (topic == "")
+			channels.find(name)->second->topic(client);
+		else
+			channels.find(name)->second->topic(client, topic);
+	}
 }
