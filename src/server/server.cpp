@@ -316,7 +316,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			else if (buffer.compare(0, 7, "INVITE ") == 0)
 				ft_invite(findclient->second, buffer.substr(7, buffer.size() - 8));
 			else if (buffer.compare(0, 7, "TOPIC #") == 0)
-				ft_topic(findclient->second, buffer.substr(7, buffer.size() - 9));
+				ft_topic(findclient->second, buffer.substr(7, buffer.size() - 8));
 			else
 				std::cout << buffer;
 		}
@@ -417,6 +417,9 @@ void Server::ft_invite(Client *client, std::string buffer)
 void	Server::ft_topic(Client * client, std::string buffer)
 {
 	std::string name = buffer.substr(0, buffer.find(" "));
-	std::cout << name<<std::endl;
-	(void)client;
+	std::string topic = "";
+	if (buffer.find(":") != std::string::npos)
+		topic = buffer.substr(buffer.find(":") + 1, buffer.size() - (buffer.find(":") + 1));
+	if (channels.find(name) != channels.end())
+		channels.find(name)->second->topic(client, topic);
 }
