@@ -370,3 +370,14 @@ const std::string	&Channel::getName(void) const
 {
 	return (_name);
 }
+
+
+std::map<std::string, Client *> & Channel::getOpe(void)
+{
+	return _operators;
+}
+
+std::map<std::string, Client *> & Channel::getReg(void)
+{
+	return _regulars;
+}

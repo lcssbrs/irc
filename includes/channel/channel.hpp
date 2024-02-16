@@ -26,6 +26,8 @@ class Channel {
 		void	sendMessage(Client *user, std::string msg);
 		void	sendLeave(Client *user, std::string &msg);
 		void	sendAll(std::string &msg);
+		std::map<std::string, Client *> &getOpe(void);
+		std::map<std::string, Client *> &getReg(void);
 
 		//getters
 		const std::string	&getName(void) const;

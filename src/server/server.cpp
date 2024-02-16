@@ -101,6 +101,8 @@ void Server::manage_loop()
 		{
             for (size_t i = 0; i < fds.size(); ++i)
 			{
+				if (clients.find(fds[i].fd) != clients.end())
+					send_ping(clients.find(fds[i].fd)->second);
                 if (fds[i].revents & POLLIN)
 				{
                     if (fds[i].fd == fd_server)
@@ -138,6 +140,14 @@ void Server::manage_loop()
                             // Déconnexion du client
                             std::cerr << "Client " << clients.find(fds[i].fd)->second->getNickname() << "!" << clients.find(fds[i].fd)->second->getUsername() << " has leaved the server." << std::endl;
                             close(fds[i].fd);
+							std::string name = clients.find(fds[i].fd)->second->getNickname();
+							std::map<std::string, Channel *>::iterator it = channels.begin();
+							while (it != channels.end())
+							{
+								while (it->second->getReg().find(name) != it->second->getReg().end())
+									it->second->userLeave(clients.find(fds[i].fd)->second, "Disconnected server\n");
+								it++;
+							}
 							delete (clients.find(fds[i].fd)->second);
 							clients.erase(fds[i].fd);
                             fds.erase(fds.begin() + i);
