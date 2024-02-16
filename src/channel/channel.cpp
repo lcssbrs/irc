@@ -114,6 +114,7 @@ void	Channel::topic(Client *user, std::string &topic)
 
 void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
 {
+	std::cout << "option: " << option << ", arg: " << arg << std::endl;
 	if (_operators.find(user->getNickname()) == _operators.end())
 	{
 		sendResponse(user->getFd(), "482", user->getNickname(), "");
@@ -173,6 +174,8 @@ void	Channel::mode(Client *user, bool change, std::string &option, std::string &
 			_nUser = i;
 		}
 	}
+	else if (option == "b" or option == "")
+		return ;
 	else
 		sendResponse(user->getFd(), "472", user->getNickname(), "");
 }
@@ -191,7 +194,8 @@ void	Channel::userJoin(Client *user, std::string password)
 	}
 	else if (_inviteOnly == true)
 	{
-		sendResponse(user->getFd(), "473", user->getNickname(), "");
+		std::string msg = ":127.0.0.1 " + user->getNickname() + " #" + _name + " :Cannot join channel, you must be invited\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		return ;
 	}
 	if (user)

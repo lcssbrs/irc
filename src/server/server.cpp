@@ -285,7 +285,6 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 {
 	std::map<int, Client *>::iterator findclient;
 
-	std::cout << buffer;
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{
@@ -302,8 +301,6 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				sendmessagetoclient(findclient->second, buffer);
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
-			else if (buffer.compare(0, 5, "mode ") == 0)
-				mode_channel(buffer.substr(5, buffer.size() - 6), findclient->second);
 			else if (buffer.compare(0, 6, "MODE #") == 0)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			//else if (buffer.compare(0, 4, "PING") == 0)
