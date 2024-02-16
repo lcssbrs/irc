@@ -82,22 +82,25 @@ void	Channel::topic(Client *user) const
 {
 	if (_regulars.find(user->getNickname()) == _regulars.end())
 	{
-		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		return ;
 	}
 	if (_topic == "")
 	{
-		sendResponse(user->getFd(), "331", user->getNickname(), "");
+		std::string msg = ":127.0.0.1 331 " + user->getNickname() + " #" + _name + " :No topic set\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		return ;
 	}
-	send(user->getFd(), _topic.c_str(), _topic.size(), MSG_CONFIRM);
+	sendResponse(user->getFd(), "332", user->getNickname(), _topic);
 }
 
 void	Channel::topic(Client *user, std::string &topic)
 {
 	if (_regulars.find(user->getNickname()) == _regulars.end())
 	{
-		sendResponse(user->getFd(), "442", user->getNickname(), "");
+		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		return ;
 	}
 	if (_restrictTopic == true)
