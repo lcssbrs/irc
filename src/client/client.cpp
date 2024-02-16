@@ -5,6 +5,8 @@ Client::Client(std::string nickname, std::string username, int fd) : _nickname(n
 	isCreated = false;
 	pass = false;
 	nbmsg = 0;
+	_time = time(NULL);
+	_time_ = time(NULL);
 }
 
 Client::~Client(void) {}
@@ -62,4 +64,24 @@ void				Client::setNickname(const std::string &nick)
 void				Client::setUsername(const std::string &user)
 {
 	_username = user;
+}
+
+time_t				Client::getTime(void)const
+{
+	return _time;
+}
+
+void				Client::setTime(time_t newTime)
+{
+	_time = newTime;
+}
+
+time_t				Client::getTimeping(void)const
+{
+	return _time_;
+}
+
+void				Client::setTimeping(time_t newTime)
+{
+	_time_ = newTime;
 }
