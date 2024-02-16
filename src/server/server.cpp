@@ -289,7 +289,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 		else
 		{
 			//send_ping(findclient->second);
-			//std::cout << buffer << std::endl;
+			std::cout << buffer << std::endl;
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
@@ -314,6 +314,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				ft_kick(findclient->second, buffer.substr(6, buffer.size() - 7));
 			else if (buffer.compare(0, 7, "INVITE ") == 0)
 				ft_invite(findclient->second, buffer.substr(7, buffer.size() - 8));
+			else if (buffer.compare(0, 7, "TOPIC #") == 0)
+				ft_topic(findclient->second, buffer.substr(7, buffer.size() - 9));
 			else
 				std::cout << buffer;
 		}
@@ -409,4 +411,11 @@ void Server::ft_invite(Client *client, std::string buffer)
 		iencli = "";
 	if(channels.find(name) != channels.end())
 		channels.find(name)->second->invite(client, iencli, clients);
+}
+
+void	Server::ft_topic(Client * client, std::string buffer)
+{
+	std::string name = buffer.substr(0, buffer.find(" "));
+	std::cout << name<<std::endl;
+	(void)client;
 }

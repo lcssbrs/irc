@@ -52,6 +52,7 @@ class Server
 		void	sendmessagetoclient(Client * client, std::string buffer);
 		void	ft_kick(Client * client, std::string channel);
 		void	ft_invite(Client *client, std::string buffer);
+		void	ft_topic(Client * client, std::string buffer);
 
 		class BindException: public std::exception
 		{
