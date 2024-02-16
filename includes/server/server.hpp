@@ -50,7 +50,7 @@ class Server
 		void	closeClient(Client &client, int i);
 		int		checkNickname(std::string nick, int fd);
 		void	sendmessagetoclient(Client * client, std::string buffer);
-		void	ft_kick(Client * client, std::string channel ,std::string name);
+		void	ft_kick(Client * client, std::string channel);
 
 		class BindException: public std::exception
 		{

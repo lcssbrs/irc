@@ -224,21 +224,16 @@ void Server::create_channel(std::string name, Client * client)
 {
 	size_t lenName = name.find(" ");
 	std::string newName = name.substr(0, lenName);
-	std::string newName = newName.substr(0, newName.find(" "));
 	std::string password = name.substr(lenName + 1, name.size() - (lenName));
 	if (password == newName)
 		password = "";
 	if (channels.find(newName) == channels.end())
 	{
 		std::cout << "channel " << newName << " created by " << client->getNickname() << "\n" ;
-		channels[name] = new Channel(name, password, client);
-		//channels.find(name)->second->userJoin(client, password);
-		//message a send
+		channels[newName] = new Channel(newName, password, client);
 	}
-	else if (channels.find(name) != channels.end())
-	{
-		channels.find(name)->second->userJoin(client, password);
-	}
+	else if (channels.find(newName) != channels.end())
+		channels.find(newName)->second->userJoin(client, password);
 }
 
 void Server::remove_client_from_channel(Client * kick)
@@ -308,8 +303,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			//	std::string result = "PONG " + buffer.substr(4, buffer.size() - 5);
 			//	write(findclient->second->getFd(), result.c_str(), result.size());
 			//}
-			else if (buffer.compare(0, 5, "KICK") == 0)
-				std::cout << "test\n";
+			else if (buffer.compare(0, 6, "KICK #") == 0)
+				ft_kick(findclient->second, buffer.substr(6, buffer.size() - 7));
 			else
 				std::cout << buffer;
 		}
@@ -331,7 +326,7 @@ void	Server::mode_channel(std::string channel, Client * client)
 	std::string arg = channel;
 	for(int i = 0; i < 2 ;i++)
 		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
-	if (arg == mode)
+	if (arg == mode or arg == name)
 		arg = "";
 	if (mode.compare(0, 1, "-") == 0)
 		boole = false;
@@ -369,11 +364,14 @@ int	Server::checkNickname(std::string nick, int fd)
 	return (0);
 }
 
-void	Server::ft_kick(Client * client, std::string channel ,std::string name)
+void	Server::ft_kick(Client * client, std::string buffer)
 {
-	if (channels.find(channel) == channels.end())
-		return ;
-	channels.find(channel)->second->kick(client, name);
+	(void)client;
+	std::cout << buffer << std::endl;
+	std::string channel = buffer.substr(0, buffer.find(" "));
+	std::cout << channel << std::endl;
+	buffer = buffer.substr(buffer.find(" ") + 1, buffer.size() - (buffer.find(" ") + 1));
+	std::cout << buffer << std::endl;
 }
 
 void	Server::send_ping(int fd)
