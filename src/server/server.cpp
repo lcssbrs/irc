@@ -326,7 +326,9 @@ void	Server::mode_channel(std::string channel, Client * client)
 	std::string arg = channel;
 	for(int i = 0; i < 2 ;i++)
 		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
-	if (arg == mode or arg == name)
+	if (channel.find(" ") == channel.rfind(" "))
+		arg = " ";
+	if (arg == mode)
 		arg = "";
 	if (mode.compare(0, 1, "-") == 0)
 		boole = false;
