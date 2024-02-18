@@ -45,7 +45,7 @@ class Server
 		void	mode_channel(std::string channel, Client * client);
 		void	create_client(std::string & buffer, Client & client, int i);
 		void	create_channel(std::string name, Client * client);
-		void	remove_client_from_channel(Client * kick);
+		void	remove_client_from_channel(Client *user, std::string arg);
 		void	parsing_msg(std::string & buffer, int fd, int i);
 		void	closeClient(Client &client, int i);
 		int		checkNickname(std::string nick, int fd);

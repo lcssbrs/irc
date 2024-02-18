@@ -14,7 +14,7 @@ Channel::Channel(std::string &name, std::string password, Client *creator) : _na
 		_passwordUse = false;
 	_nUser = 0;
 	setTopicInformation(creator);
-	std::string msg = ":" + creator->getNickname() + "!" + creator->getUsername() + "@127.0.0.1 JOIN #" + name + "\n";
+	std::string msg = ":" + creator->getNickname() + "!~" + creator->getUsername()[0] + "@127.0.0.1 JOIN #" + name + "\n";
 	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
 	msg = ":127.0.0.1 MODE #" + name + " +nt\n";
@@ -70,7 +70,7 @@ void	Channel::invite(Client *user, std::string &name, std::map<int, Client *> &c
 	{
 		if (it->second->getNickname() == name)
 		{
-			std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 INVITE " + name + " #" + _name + '\n';
+			std::string msg = ":" + user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1 INVITE " + name + " #" + _name + '\n';
 			send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 			_invited[name] = it->second;
 			return ;
@@ -287,7 +287,7 @@ void	Channel::userJoin(Client *user, std::string password)
 	if (user)
 	{
 		sendNewcomer(user);
-		std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN #" + _name + "\n";
+		std::string msg = ":" + user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1 JOIN #" + _name + "\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 
 		if (_topic != "")
@@ -320,34 +320,51 @@ void	Channel::userJoin(Client *user, std::string password)
 
 void	Channel::sendNewcomer(Client *user)
 {
-	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 JOIN :#" + _name + "\n";
+	std::string msg = ":" + user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1 JOIN :#" + _name + "\n";
 	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
 		send(it->second->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
 
 int		Channel::userLeave(Client *user, std::string msg)
 {
+	if (_regulars.find(user->getNickname()) == _regulars.end())
+	{
+		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 	if (_operators.find(user->getNickname()) != _operators.end())
 	{
+		sendLeave(user, msg);
 		_operators.erase(user->getNickname());
 		_regulars.erase(user->getNickname());
 		if (_operators.size() == 0)
 		{
 			if (_regulars.size() == 0)
-				return (1); //last user left need to close the channel
+				return (1);
 			else
-				_operators[_regulars.begin()->first] = _regulars.begin()->second; //latest user who joined the channel become the operator become last operator left
+			{
+				std::string msg = "PRIVMSG #" + _name + " :Last operator leaved the channel, oldest user will become operator\n";
+				sendAll(msg);
+				std::map<std::string, Client *>::iterator	it = _regulars.begin();
+				_operators[it->first] = it->second;
+				msg = ":IRCserver@127.0.0.1 MODE #" + _name + " +o " + it->first + "\n";
+				sendAll(msg);
+			}
 		}
 		return (0);
 	}
-	_regulars.erase(user->getNickname());
 	sendLeave(user, msg);
+	_regulars.erase(user->getNickname());
 	return (0);
 }
 
 void	Channel::sendLeave(Client *user, std::string &msg)
 {
-	std::string res = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 PART #" + _name + msg;
+	std::string	res;
+	if (msg != "")
+		res = ":" + user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1 PART #" + _name + msg;
+	else
+		res = ":" + user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1 PART #" + _name + '\n';
 	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
 		send(it->second->getFd(), res.c_str(), res.size(), MSG_CONFIRM);
 }
@@ -359,7 +376,7 @@ void	Channel::sendMessage(Client *user, std::string msg)
 		sendResponse(user->getFd(), "442", user->getNickname(), "");
 		return ;
 	}
-	std::string res = ":" + user->getNickname() + "!" + user->getUsername() + "@127.0.0.1 PRIVMSG #" + _name + " :" + msg + "\n";
+	std::string res = ":" + user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1 PRIVMSG #" + _name + " :" + msg + "\n";
 	for (std::map<std::string, Client *>::iterator it = _regulars.begin(); it != _regulars.end(); it++)
 	{
 		if (it->second != user)
@@ -391,7 +408,7 @@ std::map<std::string, Client *> & Channel::getReg(void)
 
 void	Channel::setTopicInformation(Client *user)
 {
-	_topicsetter = user->getNickname() + '!' + user->getUsername() + "@127.0.0.1";
+	_topicsetter = user->getNickname() + "!~" + user->getUsername()[0] + "@127.0.0.1";
 	time_t	timestamp = time(NULL);
 	char buffer[50];
 	std::sprintf(buffer, "%d", static_cast<int>(timestamp));

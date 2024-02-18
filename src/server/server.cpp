@@ -145,7 +145,13 @@ void Server::manage_loop()
 							while (it != channels.end())
 							{
 								while (it->second->getReg().find(name) != it->second->getReg().end())
-									it->second->userLeave(clients.find(fds[i].fd)->second, "Disconnected server\n");
+								{
+									if (it->second->userLeave(clients.find(fds[i].fd)->second, " :Disconnected server\n") == 1)
+									{
+										delete channels[name];
+										channels.erase(name);
+									}
+								}
 								it++;
 							}
 							delete (clients.find(fds[i].fd)->second);
@@ -224,7 +230,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 	if (client.getPass() == true and client.getNickname() != "" and client.getUsername() != "")
 	{
 		client.setCreatedtoTrue();
-		std::string msg = ":127.0.0.1 001 " + client.getNickname() + " :" + "Welcome to the best IRC server of 42 " + client.getNickname() + "!\n";
+		std::string msg = ":127.0.0.1 001 " + client.getNickname() + " :" + "Welcome to the Internet Relay Network of 42, " + client.getNickname() + "!" + client.getUsername() + "@127.0.0.1\n";
 		send(client.getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 		std::cout << "Client " << client.getNickname() << "!" << client.getUsername() << " connected!" << std::endl;
 	}
@@ -239,16 +245,35 @@ void Server::create_channel(std::string name, Client * client)
 		password = "";
 	if (channels.find(newName) == channels.end())
 	{
-		std::cout << "channel " << newName << " created by " << client->getNickname() << "\n" ;
+		std::cout << "Channel " << newName << " created by " << client->getNickname() << "\n" ;
 		channels[newName] = new Channel(newName, password, client);
 	}
 	else if (channels.find(newName) != channels.end())
 		channels.find(newName)->second->userJoin(client, password);
 }
 
-void Server::remove_client_from_channel(Client * kick)
+void Server::remove_client_from_channel(Client *user, std::string arg)
 {
-	(void)kick;
+	std::string name = arg.substr(1, arg.find(' ') - 1);
+	if (name.find('\n') != std::string::npos)
+		name.resize(name.size() - 1);
+	std::string msg = "";
+	if (name.size() + 1 < arg.size())
+		msg = arg.substr(name.size() + 1);
+	if (channels.find(name) != channels.end())
+	{
+		if (channels[name]->userLeave(user, msg) == 1)
+		{
+			delete channels[name];
+			channels.erase(name);
+			std::cout << "Channel " << name << " has been erased." << std::endl;
+		}
+	}
+	else
+	{
+		std::string msg = ":127.0.0.1 403 " + user->getNickname() + " #" + name + '\n';
+		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 }
 
 void	Server::sendmessagetoclient(Client *client, std::string buffer)
@@ -266,12 +291,13 @@ void	Server::sendmessagetoclient(Client *client, std::string buffer)
 			}
 			it++;
 		}
-		sendResponse(client->getFd(), "401", client->getNickname(), "");
+		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + name + '\n';
+		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
 	else
 	{
 		std::string name = buffer.substr(8, buffer.find(' ', 8) - 8);
-		std::string msg = ":" + client->getNickname() + "!" + client->getNickname() + "@127.0.0.1 " + buffer;
+		std::string msg = ":" + client->getNickname() + "!~" + client->getNickname()[0] + "@127.0.0.1 " + buffer;
 		std::map<int, Client *>::iterator it = clients.begin();
 		while (it != clients.end())
 		{
@@ -282,7 +308,8 @@ void	Server::sendmessagetoclient(Client *client, std::string buffer)
 			}
 			it++;
 		}
-		sendResponse(client->getFd(), "401", client->getNickname(), "");
+		msg = ":127.0.0.1 401 " + client->getNickname() + ' ' + name + '\n';
+		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
 }
 
@@ -297,8 +324,6 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			create_client(buffer, (*findclient->second), i);
 		else
 		{
-			//send_ping(findclient->second);
-			std::cout << buffer << std::endl;
 			if (buffer.compare(0, 1, "!") == 0)
 			{
 				std::string name = buffer.substr(1, buffer.size() - 2);
@@ -312,9 +337,9 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				mode_channel(buffer.substr(6, buffer.size() - 7), findclient->second);
 			else if (buffer.compare(0, 4, "PING") == 0)
 			{
-			    std::string ping_param = buffer.substr(5); // Récupérez le paramètre du message PING
-			    std::string pong_message = "PONG " + ping_param + "\n"; // Construisez le message PONG
-			    send(findclient->second->getFd(), pong_message.c_str(), pong_message.size(), MSG_CONFIRM); // Envoyez le message PONG au client
+				std::string ping_param = buffer.substr(5); // Récupérez le paramètre du message PING
+				std::string pong_message = "PONG " + ping_param + "\n"; // Construisez le message PONG
+				send(findclient->second->getFd(), pong_message.c_str(), pong_message.size(), MSG_CONFIRM); // Envoyez le message PONG au client
 			}
 
 			else if (buffer.compare(0, 6, "KICK #") == 0)
@@ -323,8 +348,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				ft_invite(findclient->second, buffer.substr(7, buffer.size() - 8));
 			else if (buffer.compare(0, 7, "TOPIC #") == 0)
 				ft_topic(findclient->second, buffer.substr(7, buffer.size() - 8));
-			else
-				std::cout << buffer;
+			else if (buffer.compare(0, 5, "PART ") == 0)
+				remove_client_from_channel(findclient->second, buffer.substr(5));
 		}
 	}
 	else
@@ -354,6 +379,11 @@ void	Server::mode_channel(std::string channel, Client * client)
 		mode = mode.substr(1, lenMode - 1);
 	if (channels.find(name) != channels.end())
 		channels.find(name)->second->mode(client, boole, mode, arg);
+	else
+	{
+		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + name + '\n';
+		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 }
 
 int	Server::checkNickname(std::string nick, int fd)
@@ -393,6 +423,11 @@ void	Server::ft_kick(Client * client, std::string buffer)
 		nickname = "";
 	if (channels.find(channel) != channels.end())
 		channels.find(channel)->second->kick(client, nickname);
+	else
+	{
+		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + channel + '\n';
+		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 }
 
 void	Server::send_ping(Client * client)
@@ -418,6 +453,11 @@ void Server::ft_invite(Client *client, std::string buffer)
 		iencli = "";
 	if(channels.find(name) != channels.end())
 		channels.find(name)->second->invite(client, iencli, clients);
+		else
+	{
+		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + name + '\n';
+		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	}
 }
 
 void	Server::ft_topic(Client * client, std::string buffer)
@@ -432,5 +472,10 @@ void	Server::ft_topic(Client * client, std::string buffer)
 			channels.find(name)->second->topic(client);
 		else
 			channels.find(name)->second->topic(client, topic);
+	}
+	else
+	{
+		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + name + '\n';
+		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	}
 }
