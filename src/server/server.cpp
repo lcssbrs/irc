@@ -495,7 +495,21 @@ void	Server::ft_topic(Client * client, std::string buffer)
 
 void	Server::sendInfo(Client *user)
 {
-	std::string	msg = ":IRCserver@127.0.0.1 PRIVMSG :Hi " + user->getNickname() + "! Here are the useful commands present on our server:\n- JOIN: allows you to join a channel or create it if it does not exist.\n- PART: allows you to leave a channel.\n- PRIVMSG: allows you to send a message to a user or a channel.\n- KICK: allows you to kick a user of a channel.\n- INVITE: allows you to invite a user to a channel.\n- MODE: allows you to change the parameters of a channel: enable/disable password (k), enable/disable user limit (l), enable/disable invite-only (i), restrict/ unrestrict the topic (t) or promote/demote the operator title.\n- TOPIC: allows you to see/define the topic of a channel.\n";
+	std::string	msg = ":IRCserver@127.0.0.1 PRIVMSG :Hi " + user->getNickname() + "! Here are the useful commands present on our server:\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- JOIN: allows you to join a channel or create it if it does not exist.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- PART: allows you to leave a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- PRIVMSG: allows you to send a message to a user or a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- KICK: allows you to kick a user of a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- INVITE: allows you to invite a user to a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- MODE: allows you to change the parameters of a channel: enable/disable password (k), enable/disable user limit (l), enable/disable invite-only (i), restrict/ unrestrict the topic (t) or promote/demote the operator title.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- TOPIC: allows you to see/define the topic of a channel.\n";
 	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	msg = ":IRCserver@127.0.0.1 PRIVMSG :Have fun and enjoy your time here!\n";
 	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);

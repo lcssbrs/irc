@@ -343,7 +343,7 @@ int		Channel::userLeave(Client *user, std::string msg)
 				return (1);
 			else
 			{
-				std::string msg = "PRIVMSG #" + _name + " :Last operator leaved the channel, oldest user will become operator\n";
+				std::string msg = ":IRCserver@127.0.0.1 PRIVMSG #" + _name + " :Last operator leaved the channel, oldest user will become operator\n";
 				sendAll(msg);
 				std::map<std::string, Client *>::iterator	it = _regulars.begin();
 				_operators[it->first] = it->second;
