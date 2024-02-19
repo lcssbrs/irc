@@ -489,7 +489,11 @@ void	Server::send_ping(Client * client)
 void Server::ft_invite(Client *client, std::string buffer)
 {
 	std::string name;
-	std::string clientname = buffer.substr(0, buffer.find("#") - 1);
+	std::string clientname;
+	if (buffer.find("#") != std::string::npos)
+		clientname = buffer.substr(0, buffer.find("#") - 1);
+	else
+		clientname = buffer.substr(0, buffer.size());
 	name = buffer.substr(buffer.find("#") + 1, buffer.size() - (buffer.find("#") + 1));
 	std::cout << "name: " << name << " client: " << clientname << std::endl;
 	if(channels.find(name) != channels.end())
