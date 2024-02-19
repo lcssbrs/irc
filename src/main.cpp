@@ -35,6 +35,7 @@ void set_signal_action(void)
 
 int	main(int ac, char **ag)
 {
+	//IRC by lseiberr, hbaduel, aandrieux, tde-los-
 	checkarg(ag, ac);
 	*isServ() = new Server(atoi(ag[1]), ag[2]);
 	set_signal_action();
