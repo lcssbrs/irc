@@ -100,58 +100,51 @@ static int get_line(int fd, std::string &line)
 
 void Server::manage_loop()
 {
-    struct sockaddr_in sin;
-    socklen_t len = sizeof(sin);
-    std::string line[backlog]; // Tableau de lignes pour chaque descripteur de fichier
+	struct sockaddr_in sin;
+	socklen_t len = sizeof(sin);
+	std::string line[backlog];
 	line->clear();
-    while (true)
+	while (true)
 	{
-        int num_events = poll(&fds.front(), fds.size(), -1);
-        if (num_events == -1)
-            break;
-        if (num_events > 0)
+		int num_events = poll(&fds.front(), fds.size(), -1);
+		if (num_events == -1)
+			break;
+		if (num_events > 0)
 		{
-            for (size_t i = 0; i < fds.size(); ++i)
+			for (size_t i = 0; i < fds.size(); ++i)
 			{
-				//if (clients.find(fds[i].fd) != clients.end())
-				//	send_ping(clients.find(fds[i].fd)->second);
-                if (fds[i].revents & POLLIN)
+				if (fds[i].revents & POLLIN)
 				{
-                    if (fds[i].fd == fd_server)
+					if (fds[i].fd == fd_server)
 					{
-                        // Nouvelle connexion entrante
-                        int client_fd = accept(fd_server, (struct sockaddr*)&sin, &len);
-                        if (client_fd == -1)
+						int client_fd = accept(fd_server, (struct sockaddr*)&sin, &len);
+						if (client_fd == -1)
 						{
-                            std::cerr << "Error accepting connection" << std::endl;
-                        }
+							std::cerr << "Error accepting connection" << std::endl;
+						}
 						else
 						{
-                            // Ajouter le nouveau client à la liste des descripteurs de fichiers à surveiller
-                            struct pollfd client_pollfd;
-                            client_pollfd.fd = client_fd;
-                            client_pollfd.events = POLLIN;
+							struct pollfd client_pollfd;
+							client_pollfd.fd = client_fd;
+							client_pollfd.events = POLLIN;
 							client_pollfd.revents = POLLIN;
-                            fds.push_back(client_pollfd);
+							fds.push_back(client_pollfd);
 							clients[client_fd] = new Client ("", "", client_fd);
-                        }
-                    }
+						}
+					}
 					else
 					{
-                        // Données disponibles sur un client existant
-                        std::string buffer;
-                        int bytes_received = get_line(fds[i].fd, buffer);
-                        if (bytes_received > 0)
+						std::string buffer;
+						int bytes_received = get_line(fds[i].fd, buffer);
+						if (bytes_received > 0)
 						{
-                            // Traitement des données reçues
-                            line[fds[i].fd] += buffer;
+							line[fds[i].fd] += buffer;
 							parsing_msg(buffer, fds[i].fd, i);
-                        }
+						}
 						else if (bytes_received == 0)
 						{
-                            // Déconnexion du client
-                            std::cerr << "Client " << clients.find(fds[i].fd)->second->getNickname() << "!" << clients.find(fds[i].fd)->second->getUsername() << " has leaved the server." << std::endl;
-                            close(fds[i].fd);
+							std::cerr << "Client " << clients.find(fds[i].fd)->second->getNickname() << "!" << clients.find(fds[i].fd)->second->getUsername() << " has leaved the server." << std::endl;
+							close(fds[i].fd);
 							std::string name = clients.find(fds[i].fd)->second->getNickname();
 							std::map<std::string, Channel *>::iterator it = channels.begin();
 							while (it != channels.end())
@@ -168,18 +161,15 @@ void Server::manage_loop()
 							}
 							delete (clients.find(fds[i].fd)->second);
 							clients.erase(fds[i].fd);
-                            fds.erase(fds.begin() + i);
-                        }
+							fds.erase(fds.begin() + i);
+						}
 						else
-						{
-                            // Erreur de réception
-                            std::cerr << "Error receiving data from client" << std::endl;
-                    	}
+							std::cerr << "Error receiving data from client" << std::endl;
 					}
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 }
 
 int Server::manage_server()
@@ -378,7 +368,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 			{
 				std::string ping_param = buffer.substr(5);
 				std::string pong_message = "PONG " + ping_param + "\n";
-				send(findclient->second->getFd(), pong_message.c_str(), pong_message.size(), MSG_CONFIRM); // Envoyez le message PONG au client
+				send(findclient->second->getFd(), pong_message.c_str(), pong_message.size(), MSG_CONFIRM);
 			}
 
 			else if (buffer.compare(0, 5, "KICK ") == 0)
@@ -511,7 +501,6 @@ void Server::ft_invite(Client *client, std::string buffer)
 	else
 		clientname = buffer.substr(0, buffer.size());
 	name = buffer.substr(buffer.find("#") + 1, buffer.size() - (buffer.find("#") + 1));
-	std::cout << "name: " << name << " client: " << clientname << std::endl;
 	if (name == "" or clientname == "" or clientname.find("#") != std::string::npos)
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");

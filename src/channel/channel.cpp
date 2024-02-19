@@ -278,6 +278,11 @@ void	Channel::mode(Client *user, bool change, std::string &option, std::string &
 
 void	Channel::userJoin(Client *user, std::string password)
 {
+	if (_regulars.find(user->getNickname()) != _regulars.end())
+	{
+		sendResponse(user->getFd(), "443", user->getNickname(), "");
+		return ;
+	}
 	if (_limitUser == true and static_cast<int>(_regulars.size()) == _nUser)
 	{
 		sendResponse(user->getFd(), "471", user->getNickname(), "");
