@@ -27,7 +27,10 @@ Channel::Channel(std::string &name, std::string password, Client *creator) : _na
 	send(creator->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 }
 
-Channel::~Channel(void) {}
+Channel::~Channel(void)
+{
+
+}
 
 void Channel::kick(Client *user, std::string &name)
 {
@@ -130,11 +133,6 @@ void	Channel::topic(Client *user, std::string &topic)
 
 void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
 {
-	std::cout << "option: " << option << ", arg: " << arg;
-	if (change == true)
-		std::cout << ", true\n";
-	else
-		std::cout << ", false\n";
 	if (option == "b" or option == "")
 		return ;
 	if (_regulars.find(user->getNickname()) == _regulars.end())
@@ -188,6 +186,11 @@ void	Channel::mode(Client *user, bool change, std::string &option, std::string &
 	}
 	else if (option == "o")
 	{
+		if (arg == "")
+		{
+			sendResponse(user->getFd(), "461", user->getNickname(), "");
+			return ;
+		}
 		if (change == true)
 		{
 			if (_operators.find(arg) != _operators.end())

@@ -238,6 +238,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 			send(client.getFd(), "ERROR :Closing Link: localhost (Bad Password)\n", 46, MSG_CONFIRM);
 		}
 		closeClient(client, i);
+		return ;
 	}
 	if (client.getPass() == true and client.getNickname() != "" and client.getUsername() != "")
 	{
