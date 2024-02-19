@@ -473,6 +473,11 @@ void	Server::ft_kick(Client * client, std::string buffer)
 	}
 	buffer = buffer.substr(1, buffer.size() - 1);
 	std::string channel = buffer.substr(0, buffer.find(" "));
+	if (channel == "")
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
+		return ;
+	}
 	buffer = buffer.substr(buffer.find(" ") + 1, buffer.size() - (buffer.find(" ") + 1));
 	std::string nickname = buffer.substr(0, buffer.find(" "));
 	if (nickname == channel)
@@ -530,6 +535,11 @@ void	Server::ft_topic(Client * client, std::string buffer)
 	}
 	buffer = buffer.substr(1, buffer.size() - 1);
 	std::string name = buffer.substr(0, buffer.find(" "));
+	if (name == "")
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
+		return ;
+	}
 	std::string topic = "";
 	if (buffer.find(":") != std::string::npos)
 		topic = buffer.substr(buffer.find(":") + 1, buffer.size() - (buffer.find(":") + 1));
