@@ -23,6 +23,7 @@ void handler_function(int sig)
 		return ;
 	std::cerr << "Server has been stopped\n";
 	delete (*isServ());
+	exit(0);
 }
 
 void set_signal_action(void)
