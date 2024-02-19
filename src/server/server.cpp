@@ -497,6 +497,11 @@ void Server::ft_invite(Client *client, std::string buffer)
 		clientname = buffer.substr(0, buffer.size());
 	name = buffer.substr(buffer.find("#") + 1, buffer.size() - (buffer.find("#") + 1));
 	std::cout << "name: " << name << " client: " << clientname << std::endl;
+	if (name == "" or clientname == "" or clientname.find("#") != std::string::npos)
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
+		return ;
+	}
 	if(channels.find(name) != channels.end())
 		channels.find(name)->second->invite(client, clientname, clients);
 	else
