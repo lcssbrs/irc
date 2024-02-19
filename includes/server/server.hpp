@@ -1,5 +1,6 @@
 #pragma once
 
+#include <signal.h>
 #include <iostream>
 #include <poll.h>
 #include <map>

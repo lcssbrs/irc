@@ -11,10 +11,24 @@ void checkarg(char **ag, int ac)
 	}
 }
 
+bool	*isExit(void)
+{
+	static bool ex = false;
+	return (&ex);
+}
+
+void handler_function(int sig)
+{
+	(void)sig;
+	std::cerr << "Server has been stopped\n";
+	return ;
+}
+
 int	main(int ac, char **ag)
 {
 	checkarg(ag, ac);
 	Server serv(atoi(ag[1]), ag[2]);
+	signal(SIGINT, handler_function);
 	serv.manage_server();
 
 	// (void)ac; //main pour test channels functions sans serveur
