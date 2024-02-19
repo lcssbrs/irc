@@ -15,7 +15,6 @@ class Channel {
 		Channel(std::string &name, std::string password, Client *creator);
 		~Channel(void);
 
-		//operators command
 		void	kick(Client *user, std::string &name);
 		void	invite(Client *user, std::string &name, std::map<int, Client *> &clients);
 		void	topic(Client *user) const;
@@ -28,11 +27,11 @@ class Channel {
 		void	sendMessage(Client *user, std::string msg);
 		void	sendLeave(Client *user, std::string &msg);
 		void	sendAll(std::string &msg);
-		std::map<std::string, Client *> &getOpe(void);
-		std::map<std::string, Client *> &getReg(void);
 		void	setTopicInformation(Client *user);
 
 		//getters
+		std::map<std::string, Client *> &getOpe(void);
+		std::map<std::string, Client *> &getReg(void);
 		const std::string	&getName(void) const;
 
 	private:
