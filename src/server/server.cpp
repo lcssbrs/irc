@@ -300,6 +300,11 @@ void	Server::sendmessagetoclient(Client *client, std::string buffer)
 	if (buffer.find('#') < buffer.find(':'))
 	{
 		std::string name = buffer.substr(9, buffer.find(' ', 9) - 9);
+		if (name == "" or name.find('\n') != std::string::npos)
+		{
+			sendResponse(client->getFd(), "461", client->getNickname(), "");
+			return ;
+		}
 		std::map<std::string, Channel *>::iterator it = channels.begin();
 		while (it != channels.end())
 		{
@@ -316,6 +321,11 @@ void	Server::sendmessagetoclient(Client *client, std::string buffer)
 	else
 	{
 		std::string name = buffer.substr(8, buffer.find(' ', 8) - 8);
+		if (name == "\n" or buffer[buffer.find(name) + name.size() - 1] == '\n')
+		{
+			sendResponse(client->getFd(), "461", client->getNickname(), "");
+			return ;
+		}
 		std::string msg = ":" + client->getNickname() + "!~" + client->getNickname()[0] + "@127.0.0.1 " + buffer;
 		std::map<int, Client *>::iterator it = clients.begin();
 		while (it != clients.end())
@@ -356,8 +366,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				mode_channel(buffer.substr(5, buffer.size() - 6), findclient->second);
 			else if (buffer.compare(0, 4, "PING") == 0)
 			{
-				std::string ping_param = buffer.substr(5); // Récupérez le paramètre du message PING
-				std::string pong_message = "PONG " + ping_param + "\n"; // Construisez le message PONG
+				std::string ping_param = buffer.substr(5);
+				std::string pong_message = "PONG " + ping_param + "\n";
 				send(findclient->second->getFd(), pong_message.c_str(), pong_message.size(), MSG_CONFIRM); // Envoyez le message PONG au client
 			}
 
@@ -482,8 +492,10 @@ void Server::ft_invite(Client *client, std::string buffer)
 	}
 	else
 		name = buffer.substr(buffer.find("#") + 1, buffer.find(" ") - (buffer.find("#") + 1));
-	std::string iencli = buffer.substr(name.size() + 2, buffer.find(" "));
-	std::cout << iencli << std::endl;
+	std::string iencli = "";
+	if (name.size() + 2 < buffer.size())
+		iencli = buffer.substr(name.size() + 2, buffer.find(" "));
+	std::cout << "name:" << name << "client: " << iencli << std::endl;
 	if(channels.find(name) != channels.end())
 		channels.find(name)->second->invite(client, iencli, clients);
 	else

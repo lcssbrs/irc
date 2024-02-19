@@ -130,6 +130,11 @@ void	Channel::topic(Client *user, std::string &topic)
 
 void	Channel::mode(Client *user, bool change, std::string &option, std::string &arg)
 {
+	std::cout << "option: " << option << ", arg: " << arg;
+	if (change == true)
+		std::cout << ", true\n";
+	else
+		std::cout << ", false\n";
 	if (option == "b" or option == "")
 		return ;
 	if (_regulars.find(user->getNickname()) == _regulars.end())
@@ -378,6 +383,11 @@ void	Channel::sendLeave(Client *user, std::string &msg)
 
 void	Channel::sendMessage(Client *user, std::string msg)
 {
+	if (msg == "")
+	{
+		sendResponse(user->getFd(), "461", user->getNickname(), "");
+		return ;
+	}
 	if (_regulars.find(user->getNickname()) == _regulars.end())
 	{
 		sendResponse(user->getFd(), "442", user->getNickname(), "");
