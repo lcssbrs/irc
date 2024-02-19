@@ -279,6 +279,11 @@ void Server::create_channel(std::string name, Client * client)
 
 void Server::remove_client_from_channel(Client *user, std::string arg)
 {
+	if (arg[0] != '#' or arg[1] == '\n' or arg[1] == ' ')
+	{
+		sendResponse(user->getFd(), "461", user->getNickname(), "");
+		return ;
+	}
 	std::string name = arg.substr(1, arg.find(' ') - 1);
 	if (name.find('\n') != std::string::npos)
 		name.resize(name.size() - 1);
