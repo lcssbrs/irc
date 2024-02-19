@@ -252,8 +252,10 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 void Server::create_channel(std::string name, Client * client)
 {
 	if (name.compare(0, 1, "#") != 0)
-		//message hugo stp
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
+	}
 	name = name.substr(1, name.size() - 1);
 	size_t lenName = name.find(" ");
 	std::string newName = name.substr(0, lenName);
@@ -376,8 +378,10 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 void	Server::mode_channel(std::string channel, Client * client)
 {
 	if (channel.compare(0, 1, "#") != 0)
-		//message hugo stp
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
+	}
 	channel = channel.substr(1, channel.size() - 1);
 	size_t lenName = channel.find(" ");
 	std::string name = channel.substr(0, lenName);
@@ -438,8 +442,10 @@ int	Server::checkNickname(std::string nick, int fd)
 void	Server::ft_kick(Client * client, std::string buffer)
 {
 	if (buffer.compare(0, 1, "#") != 0)
-		//message hugo stp
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
+	}
 	buffer = buffer.substr(1, buffer.size() - 1);
 	std::string channel = buffer.substr(0, buffer.find(" "));
 	buffer = buffer.substr(buffer.find(" ") + 1, buffer.size() - (buffer.find(" ") + 1));
@@ -470,7 +476,10 @@ void Server::ft_invite(Client *client, std::string buffer)
 {
 	std::string name;
 	if (buffer.find("#") == std::string::npos)
-		name = "";
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
+		return ;
+	}
 	else
 		name = buffer.substr(buffer.find("#") + 1, buffer.size() - (buffer.find("#") + 1));
 	std::string iencli = buffer.substr(0, buffer.find(" "));
@@ -488,8 +497,10 @@ void Server::ft_invite(Client *client, std::string buffer)
 void	Server::ft_topic(Client * client, std::string buffer)
 {
 	if (buffer.compare(0, 1, "#") != 0)
-		//message hugo stp
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
+	}
 	buffer = buffer.substr(1, buffer.size() - 1);
 	std::string name = buffer.substr(0, buffer.find(" "));
 	std::string topic = "";
@@ -511,7 +522,21 @@ void	Server::ft_topic(Client * client, std::string buffer)
 
 void	Server::sendInfo(Client *user)
 {
-	std::string	msg = ":IRCserver@127.0.0.1 PRIVMSG :Hi " + user->getNickname() + "! Here are the useful commands present on our server:\n- JOIN: allows you to join a channel or create it if it does not exist.\n- PART: allows you to leave a channel.\n- PRIVMSG: allows you to send a message to a user or a channel.\n- KICK: allows you to kick a user of a channel.\n- INVITE: allows you to invite a user to a channel.\n- MODE: allows you to change the parameters of a channel: enable/disable password (k), enable/disable user limit (l), enable/disable invite-only (i), restrict/ unrestrict the topic (t) or promote/demote the operator title.\n- TOPIC: allows you to see/define the topic of a channel.\n";
+	std::string	msg = ":IRCserver@127.0.0.1 PRIVMSG :Hi " + user->getNickname() + "! Here are the useful commands present on our server:\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- JOIN: allows you to join a channel or create it if it does not exist.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- PART: allows you to leave a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- PRIVMSG: allows you to send a message to a user or a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- KICK: allows you to kick a user of a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- INVITE: allows you to invite a user to a channel.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- MODE: allows you to change the parameters of a channel: enable/disable password (k), enable/disable user limit (l), enable/disable invite-only (i), restrict/ unrestrict the topic (t) or promote/demote the operator title.\n";
+	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+	msg = ":IRCserver@127.0.0.1 PRIVMSG :- TOPIC: allows you to see/define the topic of a channel.\n";
 	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	msg = ":IRCserver@127.0.0.1 PRIVMSG :Have fun and enjoy your time here!\n";
 	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
