@@ -238,6 +238,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 			send(client.getFd(), "ERROR :Closing Link: localhost (Bad Password)\n", 46, MSG_CONFIRM);
 		}
 		closeClient(client, i);
+		return ;
 	}
 	if (client.getPass() == true and client.getNickname() != "" and client.getUsername() != "")
 	{
@@ -494,7 +495,6 @@ void Server::ft_invite(Client *client, std::string buffer)
 	std::string iencli = "";
 	if (name.size() + 2 < buffer.size())
 		iencli = buffer.substr(name.size() + 2, buffer.find(" "));
-	std::cout << "name:" << name << "client: " << iencli << std::endl;
 	if(channels.find(name) != channels.end())
 		channels.find(name)->second->invite(client, iencli, clients);
 	else
