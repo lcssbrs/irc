@@ -39,6 +39,5 @@ int	main(int ac, char **ag)
 	*isServ() = new Server(atoi(ag[1]), ag[2]);
 	set_signal_action();
 	(*isServ())->manage_server();
-	delete (*isServ());
 	return (0);
 }

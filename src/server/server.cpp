@@ -405,6 +405,11 @@ void	Server::mode_channel(std::string channel, Client * client)
 	channel = channel.substr(1, channel.size() - 1);
 	size_t lenName = channel.find(" ");
 	std::string name = channel.substr(0, lenName);
+	if (channel == "")
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
+		return ;
+	}
 	std::string mode = channel.substr(lenName + 1, channel.size() - (lenName));
 	bool boole = true;
 	size_t lenMode = mode.find(" ");
