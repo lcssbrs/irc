@@ -386,7 +386,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 
 void	Server::mode_channel(std::string channel, Client * client)
 {
-	if (channel[0] != '#' or channel[1] == ' ')
+	if (channel[0] != '#' or channel[1] == ' ' or channel[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
