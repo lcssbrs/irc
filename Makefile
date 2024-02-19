@@ -34,9 +34,9 @@ COMP_START	=	echo "\n💻 $(BOLD_PURPLE)$(NAME) $(BOLD_WHITE)by $(BOLD_BLUE)hbad
 
 EXE_READY	=	echo "\n\n💬 $(BOLD_WHITE)Compilation de $(BOLD_BLUE)$(NAME)$(BOLD_GREEN) réussie !\n"
 
-CLEANED		=	echo "\n🗑️  $(BOLD_WHITE)Suppression des objets..."
+CLEANED		=	echo "\n🗑️  $(BOLD_WHITE)Suppression des objets...\n"
 
-FCLEANED	=	echo "\n🗑️  $(BOLD_WHITE)Suppression des objets et de l'exécutable..."
+FCLEANED	=	echo "\n🗑️  $(BOLD_WHITE)Suppression des objets et de l'exécutable...\n"
 
 # ------------------------------ Regles ------------------------------
 
