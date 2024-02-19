@@ -379,6 +379,8 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				ft_topic(findclient->second, buffer.substr(6, buffer.size() - 7));
 			else if (buffer.compare(0, 5, "PART ") == 0)
 				remove_client_from_channel(findclient->second, buffer.substr(5));
+			else if (buffer.compare(0, 4, "QUIT") == 0)
+				remove_fd(findclient->second, buffer.substr(4, buffer.size() - 4));
 		}
 	}
 	else
@@ -566,4 +568,39 @@ void	Server::sendInfo(Client *user)
 	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
 	msg = ":IRCserver@127.0.0.1 PRIVMSG :Have fun and enjoy your time here!\n";
 	send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+}
+
+
+void Server::remove_fd(Client * client, std::string buffer)
+{
+	std::cerr << "Client " << clients.find(client->getFd())->second->getNickname() << "!" << clients.find(client->getFd())->second->getUsername() << " has leaved the server." << std::endl;
+    close(client->getFd());
+	std::string name = clients.find(client->getFd())->second->getNickname();
+	std::map<std::string, Channel *>::iterator it = channels.begin();
+	if (buffer.find(" :") != std::string::npos)
+		buffer = buffer.substr(buffer.find(" :") , buffer.size() - buffer.find(" :"));
+	while (it != channels.end())
+	{
+		while (it->second->getReg().find(name) != it->second->getReg().end())
+		{
+			if (it->second->userLeave(clients.find(client->getFd())->second, buffer) == 1)
+			{
+				delete channels[name];
+				channels.erase(name);
+			}
+		}
+		it++;
+	}
+	int fd = client->getFd();
+	delete (clients.find(fd)->second);
+	clients.erase(fd);
+	std::vector<struct pollfd>::iterator vec = fds.begin();
+	while (vec != fds.end())
+	{
+		if (vec->fd == fd)
+		{
+			fds.erase(vec);
+			break;
+		}
+	}
 }
