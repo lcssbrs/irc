@@ -252,7 +252,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 
 void Server::create_channel(std::string name, Client * client)
 {
-	if (name.compare(0, 1, "#") != 0 or name.compare(1, 1, " ") == 0 or name[1] == '\n')
+	if (name[0] != '#' or name[1] == ' ' or (name[0] == '#' and name[1] == '\n'))
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
@@ -260,6 +260,11 @@ void Server::create_channel(std::string name, Client * client)
 	name = name.substr(1, name.size() - 1);
 	size_t lenName = name.find(" ");
 	std::string newName = name.substr(0, lenName);
+	if (newName == "")
+	{
+		sendResponse(client->getFd(), "461", client->getNickname(), "");
+		return ;
+	}
 	std::string password = name.substr(lenName + 1, name.size() - (lenName));
 	if (password == newName)
 		password = "";
@@ -392,7 +397,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 
 void	Server::mode_channel(std::string channel, Client * client)
 {
-	if (channel[0] != '#' or channel[1] == ' ')
+	if (channel[0] != '#' or channel[1] == ' ' or channel[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
@@ -490,18 +495,20 @@ void	Server::send_ping(Client * client)
 void Server::ft_invite(Client *client, std::string buffer)
 {
 	std::string name;
-	if (buffer.find("#") == std::string::npos or buffer.compare(1, 1, " ") == 0 or buffer[1] == '\n')
+	std::string clientname;
+	if (buffer.find("#") != std::string::npos)
+		clientname = buffer.substr(0, buffer.find("#") - 1);
+	else
+		clientname = buffer.substr(0, buffer.size());
+	name = buffer.substr(buffer.find("#") + 1, buffer.size() - (buffer.find("#") + 1));
+	std::cout << "name: " << name << " client: " << clientname << std::endl;
+	if (name == "" or clientname == "" or clientname.find("#") != std::string::npos)
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
 	}
-	else
-		name = buffer.substr(buffer.find("#") + 1, buffer.find(" ") - (buffer.find("#") + 1));
-	std::string iencli = "";
-	if (name.size() + 2 < buffer.size())
-		iencli = buffer.substr(name.size() + 2, buffer.find(" "));
 	if(channels.find(name) != channels.end())
-		channels.find(name)->second->invite(client, iencli, clients);
+		channels.find(name)->second->invite(client, clientname, clients);
 	else
 	{
 		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + name + '\n';
