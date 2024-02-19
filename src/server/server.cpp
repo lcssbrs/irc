@@ -15,7 +15,22 @@ Server::Server(int port, std::string pass)
 
 Server::~Server()
 {
-
+	std::string msg = ":127.0.0.1 QUIT :Server has been closed. See you next time!\n";
+	std::map<int, Client *>::iterator it = clients.begin();
+	while (it != clients.end())
+	{
+		send(it->first, msg.c_str(), msg.size(), MSG_CONFIRM);
+		delete it->second;
+		it++;
+	}
+	clients.clear();
+	std::map<std::string, Channel *>::iterator ite = channels.begin();
+	while (ite != channels.end())
+	{
+		delete ite->second;
+		ite++;
+	}
+	channels.clear();
 }
 
 const char *Server::BindException::what() const throw()
@@ -327,7 +342,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 				std::string name = buffer.substr(1, buffer.size() - 2);
 				create_channel(name, findclient->second);
 			}
-			else if (buffer.compare(0, 7, "PRIVMSG") == 0)
+			else if (buffer.compare(0, 8, "PRIVMSG ") == 0)
 				sendmessagetoclient(findclient->second, buffer);
 			else if (buffer.compare(0, 6, "JOIN #") == 0)
 				create_channel(buffer.substr(6, buffer.size() - 7), findclient->second);

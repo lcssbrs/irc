@@ -11,24 +11,33 @@ void checkarg(char **ag, int ac)
 	}
 }
 
-bool	*isExit(void)
+Server **isServ()
 {
-	static bool ex = false;
-	return (&ex);
+	static Server *serv;
+	return (&serv);
 }
 
 void handler_function(int sig)
 {
-	(void)sig;
+	if (sig != SIGINT)
+		return ;
 	std::cerr << "Server has been stopped\n";
-	return ;
+	delete (*isServ());
+}
+
+void set_signal_action(void)
+{
+	struct sigaction	act;
+	bzero(&act, sizeof(act));
+	act.sa_handler = &handler_function;
+	sigaction(SIGINT, &act, NULL);
 }
 
 int	main(int ac, char **ag)
 {
 	checkarg(ag, ac);
-	Server serv(atoi(ag[1]), ag[2]);
-	signal(SIGINT, handler_function);
-	serv.manage_server();
+	*isServ() = new Server(atoi(ag[1]), ag[2]);
+	set_signal_action();
+	(*isServ())->manage_server();
 	return (0);
 }
