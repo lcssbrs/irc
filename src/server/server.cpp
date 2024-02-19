@@ -474,7 +474,7 @@ void	Server::send_ping(Client * client)
 void Server::ft_invite(Client *client, std::string buffer)
 {
 	std::string name;
-	if (buffer.find("#") == std::string::npos or buffer.compare(1, 1, " ") == 0)
+	if (buffer.find("#") == std::string::npos or buffer.compare(1, 1, " ") == 0 or buffer[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
