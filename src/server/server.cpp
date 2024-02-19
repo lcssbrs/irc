@@ -487,7 +487,7 @@ void Server::ft_invite(Client *client, std::string buffer)
 		iencli = "";
 	if(channels.find(name) != channels.end())
 		channels.find(name)->second->invite(client, iencli, clients);
-		else
+	else
 	{
 		std::string msg = ":127.0.0.1 403 " + client->getNickname() + " #" + name + '\n';
 		send(client->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);

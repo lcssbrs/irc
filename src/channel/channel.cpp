@@ -61,11 +61,18 @@ void	Channel::invite(Client *user, std::string &name, std::map<int, Client *> &c
 	{
 		std::string msg = ":127.0.0.1 442 " + user->getNickname() + " #" + _name + "\n";
 		send(user->getFd(), msg.c_str(), msg.size(), MSG_CONFIRM);
+		return ;
 	}
 	else if (name == "")
+	{
 		sendResponse(user->getFd(), "461", user->getNickname(), "");
+		return ;
+	}
 	else if (_regulars.find(name) != _regulars.end())
+	{
 		sendResponse(user->getFd(), "443", user->getNickname(), "");
+		return ;
+	}
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->second->getNickname() == name)
