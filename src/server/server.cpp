@@ -286,7 +286,7 @@ void Server::remove_client_from_channel(Client *user, std::string arg)
 		{
 			delete channels[name];
 			channels.erase(name);
-			std::cout << "Channel " << name << " has been erased." << std::endl;
+			std::cout << "Channel " << name << " has been deleted." << std::endl;
 		}
 	}
 	else
@@ -574,7 +574,7 @@ void	Server::sendInfo(Client *user)
 void Server::remove_fd(Client * client, std::string buffer)
 {
 	std::cerr << "Client " << clients.find(client->getFd())->second->getNickname() << "!" << clients.find(client->getFd())->second->getUsername() << " has leaved the server." << std::endl;
-    close(client->getFd());
+	close(client->getFd());
 	std::string name = clients.find(client->getFd())->second->getNickname();
 	std::map<std::string, Channel *>::iterator it = channels.begin();
 	if (buffer.find(" :") != std::string::npos)
@@ -585,6 +585,7 @@ void Server::remove_fd(Client * client, std::string buffer)
 		{
 			if (it->second->userLeave(clients.find(client->getFd())->second, buffer) == 1)
 			{
+				std::cout << "Channel " << name << " has been deleted." << std::endl;
 				delete channels[name];
 				channels.erase(name);
 			}
@@ -602,5 +603,6 @@ void Server::remove_fd(Client * client, std::string buffer)
 			fds.erase(vec);
 			break;
 		}
+		vec++;
 	}
 }
