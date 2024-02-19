@@ -251,7 +251,7 @@ void Server::create_client(std::string & buffer, Client & client, int i)
 
 void Server::create_channel(std::string name, Client * client)
 {
-	if (name.compare(0, 1, "#") != 0 or name.compare(1, 1, " ") == 0)
+	if (name.compare(0, 1, "#") != 0 or name.compare(1, 1, " ") == 0 or name[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
@@ -345,7 +345,6 @@ void	Server::sendmessagetoclient(Client *client, std::string buffer)
 void Server::parsing_msg(std::string & buffer, int fd, int i)
 {
 	std::map<int, Client *>::iterator findclient;
-
 	findclient = clients.find(fd);
 	if (findclient != clients.end())
 	{
@@ -387,7 +386,7 @@ void Server::parsing_msg(std::string & buffer, int fd, int i)
 
 void	Server::mode_channel(std::string channel, Client * client)
 {
-	if (channel.compare(0, 1, "#") != 0 or channel.compare(1, 1, " ") == 0)
+	if (channel[0] != '#' or channel.compare(1, 1, " ") == 0 or channel.compare(1, 1, "\n"))
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
@@ -405,7 +404,7 @@ void	Server::mode_channel(std::string channel, Client * client)
 	for(int i = 0; i < 2 ;i++)
 		arg = arg.substr(arg.find(" ") + 1, arg.size() - arg.find(" "));
 	if (channel.find(" ") == channel.rfind(" "))
-		arg = " ";
+		arg = "";
 	if (arg == mode)
 		arg = "";
 	if (mode.compare(0, 1, "-") == 0)
@@ -451,7 +450,7 @@ int	Server::checkNickname(std::string nick, int fd)
 
 void	Server::ft_kick(Client * client, std::string buffer)
 {
-	if (buffer.compare(0, 1, "#") != 0 or buffer.compare(1, 1, " ") == 0)
+	if (buffer.compare(0, 1, "#") != 0 or buffer.compare(1, 1, " ") == 0 or buffer[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
@@ -485,7 +484,7 @@ void	Server::send_ping(Client * client)
 void Server::ft_invite(Client *client, std::string buffer)
 {
 	std::string name;
-	if (buffer.find("#") == std::string::npos or buffer.compare(1, 1, " ") == 0)
+	if (buffer.find("#") == std::string::npos or buffer.compare(1, 1, " ") == 0 or buffer[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
@@ -507,7 +506,7 @@ void Server::ft_invite(Client *client, std::string buffer)
 
 void	Server::ft_topic(Client * client, std::string buffer)
 {
-	if (buffer.compare(0, 1, "#") != 0 or buffer.compare(1, 1, " ") == 0)
+	if (buffer.compare(0, 1, "#") != 0 or buffer.compare(1, 1, " ") == 0 or buffer[1] == '\n')
 	{
 		sendResponse(client->getFd(), "461", client->getNickname(), "");
 		return ;
