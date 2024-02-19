@@ -55,6 +55,7 @@ class Server
 		void	ft_invite(Client *client, std::string buffer);
 		void	ft_topic(Client * client, std::string buffer);
 		void	sendInfo(Client *user);
+		void	remove_fd(Client * client, std::string buffer);
 
 		class BindException: public std::exception
 		{
