@@ -14,13 +14,11 @@
 #include <sys/socket.h>
 #include <cstring>
 #include <exception>
-#include "../client/client.hpp"
 #include "../channel/channel.hpp"
 #include <unistd.h>
 #include <ctime>
 
 #define backlog 42
-
 
 class Channel;
 class Client;
