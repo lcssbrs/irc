@@ -93,10 +93,7 @@ void Server::manage_loop()
 	{
         int num_events = poll(&fds.front(), fds.size(), -1);
         if (num_events == -1)
-		{
-            std::cerr << "Error in poll" << std::endl;
             break;
-        }
         if (num_events > 0)
 		{
             for (size_t i = 0; i < fds.size(); ++i)
